@@ -1,4 +1,3 @@
-// src/components/HeroSection.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -16,12 +15,18 @@ import heroImage1 from '../assets/hero1.jpg';
 import heroImage2 from '../assets/hero2.jpg';
 import heroImage3 from '../assets/hero1.jpg';
 import ambulanceLogo from '../assets/ambulance.png';
+import AppointmentModal from './AppointmentModal';
+import LoginModal from './LoginModal';
+import { useAuth } from '../context/AuthContext';
 
 const HeroSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isLoggedIn } = useAuth();
   const [currentImage, setCurrentImage] = useState(0);
   const [openModal, setOpenModal] = useState(false);
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const images = [heroImage1, heroImage2, heroImage3];
 
   useEffect(() => {
@@ -33,6 +38,14 @@ const HeroSection = () => {
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
+
+  const handleAppointmentClick = () => {
+    if (!isLoggedIn) {
+      setLoginOpen(true);
+    } else {
+      setAppointmentOpen(true);
+    }
+  };
 
   return (
     <Box
@@ -92,7 +105,7 @@ const HeroSection = () => {
           variant="contained"
           color="primary"
           size="large"
-          href="/appointment"
+          onClick={handleAppointmentClick}
           sx={{
             borderRadius: 20,
             px: 5,
@@ -229,6 +242,20 @@ const HeroSection = () => {
           </Button>
         </Box>
       </Modal>
+
+      {/* Modal for Appointment and Login */}
+      <AppointmentModal
+        open={appointmentOpen && isLoggedIn}
+        onClose={() => setAppointmentOpen(false)}
+      />
+      <LoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onLoginSuccess={() => {
+          setLoginOpen(false);
+          setAppointmentOpen(true);
+        }}
+      />
 
       <Helmet>
         <meta

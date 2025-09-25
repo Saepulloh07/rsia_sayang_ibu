@@ -62,7 +62,7 @@ const AppointmentModal = ({ open, onClose }) => {
       ctx.fillStyle = "#4CAF50";
       ctx.fillText(random, 20, 35);
 
-      // garis random
+      // Random lines
       for (let i = 0; i < 3; i++) {
         ctx.beginPath();
         ctx.moveTo(Math.random() * 150, Math.random() * 50);
@@ -93,7 +93,7 @@ const AppointmentModal = ({ open, onClose }) => {
   };
 
   const handleCheckBooking = (phone, bookingId) => {
-    // Dummy data → sambungkan ke backend Anda
+    // Dummy data → connect to your backend
     setBookingData({
       phone,
       bookingId,
@@ -136,7 +136,6 @@ const AppointmentModal = ({ open, onClose }) => {
                 p: 4,
               }}
             >
-              {/* Logo dalam circle putih */}
               <Box sx={{
                 width: 140,
                 height: 140,
@@ -186,7 +185,9 @@ const AppointmentModal = ({ open, onClose }) => {
                       value={formData.date}
                       onChange={(newValue) => setFormData({ ...formData, date: newValue })}
                       minDate={new Date()}
-                      renderInput={(params) => <TextField {...params} fullWidth margin="normal" required />}
+                      enableAccessibleFieldDOMStructure={false}
+                      slots={{ textField: TextField }}
+                      slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
                     />
 
                     <FormControl fullWidth margin="normal" required>

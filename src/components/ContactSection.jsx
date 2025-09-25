@@ -1,4 +1,3 @@
-// src/components/ContactSection.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -30,7 +29,6 @@ const ContactSection = () => {
   };
 
   const contactInfo = [
-
     {
       icon: <Phone fontSize="large" />,
       title: 'Nomor Telepon',
@@ -41,7 +39,7 @@ const ContactSection = () => {
       title: 'Alamat Email',
       detail: 'info@rsiasayangibu.com',
     },
-        {
+    {
       icon: <LocationOn fontSize="large" />,
       title: 'Alamat Kami',
       detail: 'Jl. Sudirman No. 45, Batusangkar, Tanah Datar, Sumatera Barat 27213',
@@ -81,7 +79,7 @@ const ContactSection = () => {
         {/* Info Kontak */}
         <Grid container spacing={4} justifyContent="center">
           {contactInfo.map((item, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid xs={12} sm={6} md={4} key={index}>
               <Card
                 sx={{
                   textAlign: 'center',
