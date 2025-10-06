@@ -15,8 +15,14 @@ import AboutPage from './components/AboutPage';
 import ManagementPage from './components/ManajemenPage';
 import Footer from './components/Footer';
 import ChatCS from './components/ChatCS';
+import Maintenance from './components/Maintenance';
 
 function AppContent() {
+  const isMaintenance = import.meta.env.VITE_MAINTENANCE_MODE === 'true' || false; 
+
+  if (isMaintenance) {
+    return <Maintenance />;
+  }
   return (
     <Router>
       <Helmet>
@@ -63,7 +69,7 @@ function AppContent() {
         <Route path="/doctors" element={<DoctorsPage />} />
         <Route path="/doctors/:slug" element={<div>Doctor Profile (TBD)</div>} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/management" element={<ManagementPage/>}/>
+        <Route path="/management" element={<ManagementPage />} />
       </Routes>
       <ChatCS />
     </Router>

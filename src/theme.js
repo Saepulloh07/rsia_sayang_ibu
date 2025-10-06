@@ -10,7 +10,7 @@ const theme = createTheme({
       main: '#E91E63', // Pink lembut untuk maternitas
     },
     background: {
-      default: '#FAFAFA', // Latar netral dengan kontras baik
+      default: '#FAFAFA', 
     },
     text: {
       primary: '#212121', // Kontras tinggi untuk aksesibilitas
