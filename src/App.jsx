@@ -1,24 +1,28 @@
-import React from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import { Helmet } from 'react-helmet';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import theme from './theme';
-import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import HeroSection from './components/HeroSection';
-import ServicesSection from './components/ServicesSection';
-import AboutSection from './components/AboutSection';
-import DoctorsSection from './components/DoctorsSection';
-import ContactSection from './components/ContactSection';
-import DoctorsPage from './components/DoctorsPage';
-import AboutPage from './components/AboutPage';
-import ManagementPage from './components/ManajemenPage';
-import Footer from './components/Footer';
-import ChatCS from './components/ChatCS';
-import Maintenance from './components/Maintenance';
+import React from "react";
+import { ThemeProvider } from "@mui/material/styles";
+import { Helmet } from "react-helmet";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import theme from "./theme";
+import { AuthProvider } from "./context/AuthContext";
+import Navbar from "./components/Navbar";
+import HeroSection from "./components/HeroSection";
+import ServicesSection from "./components/ServicesSection";
+import AboutSection from "./components/AboutSection";
+import DoctorsSection from "./components/DoctorsSection";
+import ContactSection from "./components/ContactSection";
+import DoctorsPage from "./components/DoctorsPage";
+import DoctorProfilePage from "./components/DoctorProfilePage";
+import AboutPage from "./components/AboutPage";
+import ManagementPage from "./components/ManajemenPage";
+import CareersPage from "./components/CareersPage";
+import ServiceDetailPage from "./components/ServiceDetailPage";
+import Footer from "./components/Footer";
+import ChatCS from "./components/ChatCS";
+import Maintenance from "./components/Maintenance";
 
 function AppContent() {
-  const isMaintenance = import.meta.env.VITE_MAINTENANCE_MODE === 'true' || false; 
+  const isMaintenance =
+    import.meta.env.VITE_MAINTENANCE_MODE === "true" || false;
 
   if (isMaintenance) {
     return <Maintenance />;
@@ -26,7 +30,10 @@ function AppContent() {
   return (
     <Router>
       <Helmet>
-        <title>RSIA Sayang Ibu Batusangkar - Layanan Kesehatan Ibu dan Anak Terbaik di Sumatera Barat</title>
+        <title>
+          RSIA Sayang Ibu Batusangkar - Layanan Kesehatan Ibu dan Anak Terbaik
+          di Sumatera Barat
+        </title>
         <meta
           name="description"
           content="Rumah Sakit Ibu dan Anak Sayang Ibu Batusangkar menyediakan layanan persalinan aman, perawatan kehamilan berkualitas, dan kesehatan anak dengan fasilitas modern dan tim medis profesional."
@@ -53,6 +60,7 @@ function AppContent() {
       </Helmet>
       <Navbar />
       <Routes>
+        {/* Home Page */}
         <Route
           path="/"
           element={
@@ -66,10 +74,79 @@ function AppContent() {
             </>
           }
         />
-        <Route path="/doctors" element={<DoctorsPage />} />
-        <Route path="/doctors/:slug" element={<div>Doctor Profile (TBD)</div>} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/management" element={<ManagementPage />} />
+
+        {/* Doctors Routes */}
+        <Route
+          path="/doctors"
+          element={
+            <>
+              <DoctorsPage />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/doctors/:slug"
+          element={
+            <>
+              <DoctorProfilePage />
+              <Footer />
+            </>
+          }
+        />
+
+        {/* About Routes */}
+        <Route
+          path="/about"
+          element={
+            <>
+              <AboutPage />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/management"
+          element={
+            <>
+              <ManagementPage />
+              <Footer />
+            </>
+          }
+        />
+
+        {/* Careers Route */}
+        <Route
+          path="/careers"
+          element={
+            <>
+              <CareersPage />
+              <Footer />
+            </>
+          }
+        />
+
+        {/* Services Routes */}
+        <Route
+          path="/services/:slug"
+          element={
+            <>
+              <ServiceDetailPage />
+              <Footer />
+            </>
+          }
+        />
+
+        {/* Contact Route */}
+        <Route
+          path="/contact"
+          element={
+            <>
+              <ContactSection />
+              <Footer />
+            </>
+          }
+        />
       </Routes>
       <ChatCS />
     </Router>
