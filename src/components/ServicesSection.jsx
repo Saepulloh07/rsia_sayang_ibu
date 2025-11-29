@@ -75,9 +75,7 @@ const ServicesSection = () => {
   const [filter, setFilter] = useState("all");
 
   const filteredServices =
-    filter === "all"
-      ? services
-      : services.filter((s) => s.category === filter);
+    filter === "all" ? services : services.filter((s) => s.category === filter);
 
   return (
     <Box

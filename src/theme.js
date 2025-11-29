@@ -1,21 +1,21 @@
 // src/theme.js
-import { createTheme } from '@mui/material/styles';
+import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#4CAF50', // Hijau tepercaya
+      main: "#4CAF50", // Hijau tepercaya
     },
     secondary: {
-      main: '#E91E63', // Pink lembut untuk maternitas
+      main: "#E91E63", // Pink lembut untuk maternitas
     },
     background: {
-      default: '#FAFAFA', 
+      default: "#FAFAFA",
     },
     text: {
-      primary: '#212121', // Kontras tinggi untuk aksesibilitas
-      secondary: '#757575',
-      white: '#ffffffff',
+      primary: "#212121", // Kontras tinggi untuk aksesibilitas
+      secondary: "#757575",
+      white: "#ffffffff",
     },
   },
   typography: {
@@ -35,10 +35,10 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 20,
-          textTransform: 'none',
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+          textTransform: "none",
+          boxShadow: "none",
+          "&:hover": {
+            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
           },
         },
       },

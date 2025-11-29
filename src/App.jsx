@@ -9,6 +9,7 @@ import HeroSection from "./components/HeroSection";
 import ServicesSection from "./components/ServicesSection";
 import AboutSection from "./components/AboutSection";
 import DoctorsSection from "./components/DoctorsSection";
+import ArticlesSection from "./components/ArticlesSection";
 import ContactSection from "./components/ContactSection";
 import DoctorsPage from "./components/DoctorsPage";
 import DoctorProfilePage from "./components/DoctorProfilePage";
@@ -16,6 +17,8 @@ import AboutPage from "./components/AboutPage";
 import ManagementPage from "./components/ManajemenPage";
 import CareersPage from "./components/CareersPage";
 import ServiceDetailPage from "./components/ServiceDetailPage";
+import ArticlesPage from "./components/ArticlesPage";
+import ArticleDetailPage from "./components/ArticleDetailPage";
 import Footer from "./components/Footer";
 import ChatCS from "./components/ChatCS";
 import Maintenance from "./components/Maintenance";
@@ -68,6 +71,7 @@ function AppContent() {
               <HeroSection />
               <DoctorsSection />
               <ServicesSection />
+              <ArticlesSection />
               <AboutSection />
               <ContactSection />
               <Footer />
@@ -90,6 +94,26 @@ function AppContent() {
           element={
             <>
               <DoctorProfilePage />
+              <Footer />
+            </>
+          }
+        />
+
+        {/* Articles Routes */}
+        <Route
+          path="/articles"
+          element={
+            <>
+              <ArticlesPage />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/articles/:id"
+          element={
+            <>
+              <ArticleDetailPage />
               <Footer />
             </>
           }

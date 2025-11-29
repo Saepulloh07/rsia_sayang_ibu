@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -15,222 +15,59 @@ import {
   List,
   ListItem,
   ListItemText,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Rating,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
-import SchoolIcon from "@mui/icons-material/School";
-import WorkIcon from "@mui/icons-material/Work";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import LanguageIcon from "@mui/icons-material/Language";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import StarIcon from "@mui/icons-material/Star";
 import logo from "../assets/logo.png";
-import doctor1 from "../assets/doctor1.jpg";
 import AppointmentModal from "./AppointmentModal";
 import LoginModal from "./LoginModal";
 import { useAuth } from "../context/AuthContext";
+import { doctorService } from "../utils/api";
 
 const DoctorProfilePage = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [doctor, setDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Data dokter (ini bisa diganti dengan fetch dari API)
-  const doctorsData = {
-    "andi-wijaya": {
-      name: "Dr. Andi Wijaya, Sp.OG",
-      specialty: "Obstetri dan Ginekologi",
-      subSpecialty: "Fetomaternal",
-      image: doctor1,
-      rating: 4.8,
-      totalReviews: 156,
-      experience: "15+ tahun",
-      patients: "2000+",
-      education: [
-        "S1 Kedokteran - Universitas Indonesia (2005)",
-        "Spesialis Obstetri dan Ginekologi - Universitas Padjadjaran (2010)",
-        "Fellowship Fetomaternal - RSCM Jakarta (2012)",
-      ],
-      certifications: [
-        "Sertifikat Kompetensi Dokter Spesialis Obstetri dan Ginekologi",
-        "Advanced Life Support in Obstetrics (ALSO)",
-        "Ultrasonografi dalam Obstetri",
-        "Laparoskopi Ginekologi",
-      ],
-      expertise: [
-        "Persalinan Normal dan Caesar",
-        "Kehamilan Risiko Tinggi",
-        "USG 4D",
-        "Program Kehamilan",
-        "Operasi Ginekologi",
-        "Kontrasepsi dan KB",
-        "Gangguan Menstruasi",
-        "Endometriosis",
-      ],
-      languages: ["Indonesia", "Inggris", "Minang"],
-      schedule: [
-        {
-          day: "Senin",
-          time: "08.00 - 12.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Selasa",
-          time: "14.00 - 18.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Rabu",
-          time: "08.00 - 12.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Kamis",
-          time: "14.00 - 18.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Jumat",
-          time: "08.00 - 12.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Sabtu",
-          time: "08.00 - 14.00",
-          location: "Poliklinik Kandungan",
-        },
-      ],
-      bio: "Dr. Andi Wijaya adalah dokter spesialis kebidanan dan kandungan dengan pengalaman lebih dari 15 tahun. Beliau memiliki keahlian khusus dalam menangani kehamilan risiko tinggi dan telah membantu ribuan ibu melahirkan dengan selamat. Dr. Andi dikenal dengan pendekatan yang ramah, komunikatif, dan selalu mengutamakan keselamatan ibu dan bayi.",
-      awards: [
-        "Best Obstetrician Award - POGI Regional Sumbar (2020)",
-        "Excellence in Maternal Care - RSIA Sayang Ibu (2019)",
-        "Top Rated Doctor - Patient Review (2018-2023)",
-      ],
-    },
-    "budi-santoso": {
-      name: "Dr. Budi Santoso, Sp.A",
-      specialty: "Anak",
-      subSpecialty: "Tumbuh Kembang",
-      image: doctor1,
-      rating: 4.9,
-      totalReviews: 203,
-      experience: "12+ tahun",
-      patients: "3000+",
-      education: [
-        "S1 Kedokteran - Universitas Andalas (2008)",
-        "Spesialis Anak - Universitas Indonesia (2013)",
-        "Fellowship Tumbuh Kembang Anak - RSCM Jakarta (2015)",
-      ],
-      certifications: [
-        "Sertifikat Kompetensi Dokter Spesialis Anak",
-        "Pediatric Advanced Life Support (PALS)",
-        "Neonatal Resuscitation Program (NRP)",
-        "Konselor Laktasi",
-      ],
-      expertise: [
-        "Tumbuh Kembang Anak",
-        "Imunisasi",
-        "Nutrisi Anak",
-        "Penyakit Infeksi Anak",
-        "Alergi Anak",
-        "Gangguan Pencernaan",
-        "Perawatan Bayi Prematur",
-        "Konseling ASI",
-      ],
-      languages: ["Indonesia", "Inggris", "Minang"],
-      schedule: [
-        { day: "Senin", time: "09.00 - 13.00", location: "Poliklinik Anak" },
-        { day: "Selasa", time: "09.00 - 13.00", location: "Poliklinik Anak" },
-        { day: "Rabu", time: "15.00 - 19.00", location: "Poliklinik Anak" },
-        { day: "Kamis", time: "09.00 - 13.00", location: "Poliklinik Anak" },
-        { day: "Jumat", time: "09.00 - 13.00", location: "Poliklinik Anak" },
-        { day: "Sabtu", time: "09.00 - 15.00", location: "Poliklinik Anak" },
-      ],
-      bio: "Dr. Budi Santoso adalah dokter spesialis anak yang berpengalaman dalam menangani berbagai kondisi kesehatan anak. Dengan pendekatan yang lembut dan penuh perhatian, Dr. Budi sangat disukai oleh anak-anak dan orang tua. Beliau memiliki keahlian khusus dalam bidang tumbuh kembang anak dan konseling ASI.",
-      awards: [
-        "Pediatrician of the Year - IDAI Sumbar (2021)",
-        "Child Healthcare Excellence Award (2020)",
-        "Best Patient Communication - RSIA Awards (2019)",
-      ],
-    },
-    "citra-dewi": {
-      name: "Dr. Citra Dewi, Sp.OG",
-      specialty: "Obstetri dan Ginekologi",
-      subSpecialty: "Fertilitas dan Reproduksi",
-      image: doctor1,
-      rating: 4.7,
-      totalReviews: 128,
-      experience: "10+ tahun",
-      patients: "1500+",
-      education: [
-        "S1 Kedokteran - Universitas Padjadjaran (2010)",
-        "Spesialis Obstetri dan Ginekologi - Universitas Indonesia (2015)",
-        "Fellowship Reproduksi - RSIA Bunda Jakarta (2017)",
-      ],
-      certifications: [
-        "Sertifikat Kompetensi Dokter Spesialis Obstetri dan Ginekologi",
-        "Reproductive Medicine Specialist",
-        "USG Ginekologi",
-        "Inseminasi Buatan",
-      ],
-      expertise: [
-        "Program Kehamilan",
-        "Infertilitas",
-        "USG 4D",
-        "Konseling Pra-Nikah",
-        "Gangguan Hormon",
-        "PCOS",
-        "Endometriosis",
-        "Kontrasepsi",
-      ],
-      languages: ["Indonesia", "Inggris"],
-      schedule: [
-        {
-          day: "Senin",
-          time: "14.00 - 18.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Rabu",
-          time: "14.00 - 18.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Kamis",
-          time: "09.00 - 13.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Jumat",
-          time: "14.00 - 18.00",
-          location: "Poliklinik Kandungan",
-        },
-        {
-          day: "Sabtu",
-          time: "10.00 - 14.00",
-          location: "Poliklinik Kandungan",
-        },
-      ],
-      bio: "Dr. Citra Dewi adalah dokter spesialis kebidanan dan kandungan dengan fokus khusus pada bidang fertilitas dan reproduksi. Dengan pengalaman lebih dari 10 tahun, beliau telah membantu banyak pasangan mewujudkan impian memiliki anak. Dr. Citra dikenal dengan pendekatan yang empatik dan profesional.",
-      awards: [
-        "Excellence in Reproductive Medicine (2022)",
-        "Patient Choice Award - Fertility Specialist (2021)",
-        "Best Practice Award - POGI (2020)",
-      ],
-    },
-  };
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      try {
+        setLoading(true);
+        const response = await doctorService.getAll();
 
-  const doctor = doctorsData[slug] || doctorsData["andi-wijaya"];
+        if (response.data.success) {
+          const foundDoctor = response.data.data.find(
+            (doc) => doc.slug === slug
+          );
+
+          if (foundDoctor) {
+            setDoctor(foundDoctor);
+            setError(null);
+          } else {
+            setError("Dokter tidak ditemukan");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching doctor:", err);
+        setError("Gagal memuat data dokter. Silakan coba lagi nanti.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctor();
+  }, [slug]);
 
   const handleAppointmentClick = () => {
     if (!isLoggedIn) {
@@ -240,13 +77,64 @@ const DoctorProfilePage = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#FAFAFA",
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: "#4CAF50" }} />
+      </Box>
+    );
+  }
+
+  if (error || !doctor) {
+    return (
+      <Box sx={{ backgroundColor: "#FAFAFA", minHeight: "100vh", py: 10 }}>
+        <Container maxWidth="md">
+          <Alert
+            severity="error"
+            sx={{ mb: 3 }}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => navigate("/doctors")}
+              >
+                Kembali
+              </Button>
+            }
+          >
+            {error || "Dokter tidak ditemukan"}
+          </Alert>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Parse schedule if it's a string (format: "Senin - Jumat, 08:00 - 16:00")
+  const scheduleItems = doctor.schedule
+    ? doctor.schedule.split(",").map((item) => {
+        const parts = item.trim().split(" ");
+        return {
+          day: parts[0],
+          time: parts.slice(1).join(" "),
+        };
+      })
+    : [];
+
   return (
     <Box sx={{ backgroundColor: "#FAFAFA", minHeight: "100vh" }}>
       <Helmet>
         <title>{doctor.name} - RSIA Sayang Ibu Batusangkar</title>
         <meta
           name="description"
-          content={`Profil ${doctor.name}, ${doctor.specialty} di RSIA Sayang Ibu Batusangkar. ${doctor.experience} pengalaman.`}
+          content={`Profil ${doctor.name}, ${doctor.specialist} di RSIA Sayang Ibu Batusangkar.`}
         />
       </Helmet>
 
@@ -269,7 +157,12 @@ const DoctorProfilePage = () => {
                 }}
               >
                 <Avatar
-                  src={doctor.image}
+                  src={
+                    doctor.photo ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      doctor.name
+                    )}&size=280&background=4CAF50&color=fff`
+                  }
                   alt={doctor.name}
                   sx={{
                     width: { xs: 200, md: 280 },
@@ -318,10 +211,10 @@ const DoctorProfilePage = () => {
                   fontSize: { xs: "1.2rem", md: "1.5rem" },
                 }}
               >
-                {doctor.specialty}
+                {doctor.specialist}
               </Typography>
               <Chip
-                label={doctor.subSpecialty}
+                label="Dokter Spesialis"
                 sx={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   color: "#FFF",
@@ -330,43 +223,11 @@ const DoctorProfilePage = () => {
                 }}
               />
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Rating value={doctor.rating} precision={0.1} readOnly />
+                <Rating value={4.8} precision={0.1} readOnly />
                 <Typography sx={{ ml: 1, fontWeight: 600 }}>
-                  {doctor.rating} ({doctor.totalReviews} ulasan)
+                  4.8 (Ulasan Pasien)
                 </Typography>
               </Box>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={6} sm={4}>
-                  <Paper
-                    sx={{
-                      p: 2,
-                      textAlign: "center",
-                      backgroundColor: "rgba(255,255,255,0.15)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                  >
-                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                      {doctor.experience}
-                    </Typography>
-                    <Typography variant="body2">Pengalaman</Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <Paper
-                    sx={{
-                      p: 2,
-                      textAlign: "center",
-                      backgroundColor: "rgba(255,255,255,0.15)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                  >
-                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                      {doctor.patients}
-                    </Typography>
-                    <Typography variant="body2">Pasien</Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
               <Button
                 variant="contained"
                 size="large"
@@ -415,247 +276,49 @@ const DoctorProfilePage = () => {
                 variant="body1"
                 sx={{ color: "#333", lineHeight: 1.8 }}
               >
-                {doctor.bio}
+                {doctor.bio ||
+                  `${doctor.name} adalah dokter spesialis ${doctor.specialist} yang berpengalaman dan berdedikasi memberikan pelayanan kesehatan terbaik untuk pasien.`}
               </Typography>
             </Paper>
 
-            {/* Education */}
-            <Paper
-              elevation={0}
-              sx={{
-                mb: 4,
-                p: { xs: 3, md: 4 },
-                borderRadius: 3,
-                border: "1px solid #E0E0E0",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <SchoolIcon sx={{ color: "#4CAF50", mr: 1, fontSize: 28 }} />
-                <Typography
-                  variant="h5"
-                  sx={{ color: "#2E7D32", fontWeight: 700 }}
-                >
-                  Pendidikan
-                </Typography>
-              </Box>
-              <List>
-                {doctor.education.map((edu, index) => (
-                  <ListItem key={index} sx={{ px: 0 }}>
-                    <ListItemText
-                      primary={edu}
-                      primaryTypographyProps={{
-                        fontSize: "1rem",
-                        color: "#333",
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Paper>
-
-            {/* Certifications */}
-            <Paper
-              elevation={0}
-              sx={{
-                mb: 4,
-                p: { xs: 3, md: 4 },
-                borderRadius: 3,
-                border: "1px solid #E0E0E0",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <WorkIcon sx={{ color: "#4CAF50", mr: 1, fontSize: 28 }} />
-                <Typography
-                  variant="h5"
-                  sx={{ color: "#2E7D32", fontWeight: 700 }}
-                >
-                  Sertifikasi
-                </Typography>
-              </Box>
-              <Grid container spacing={2}>
-                {doctor.certifications.map((cert, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Card
-                      sx={{
-                        backgroundColor: "#E8F5E9",
-                        boxShadow: "none",
-                      }}
-                    >
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="body2" sx={{ color: "#2E7D32" }}>
-                          {cert}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-
-            {/* Expertise */}
-            <Paper
-              elevation={0}
-              sx={{
-                mb: 4,
-                p: { xs: 3, md: 4 },
-                borderRadius: 3,
-                border: "1px solid #E0E0E0",
-              }}
-            >
-              <Typography
-                variant="h5"
-                sx={{ color: "#2E7D32", fontWeight: 700, mb: 3 }}
+            {/* Schedule */}
+            {scheduleItems.length > 0 && (
+              <Paper
+                elevation={0}
+                sx={{
+                  mb: 4,
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 3,
+                  border: "1px solid #E0E0E0",
+                }}
               >
-                Keahlian Khusus
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
-                {doctor.expertise.map((skill, index) => (
-                  <Chip
-                    key={index}
-                    label={skill}
-                    sx={{
-                      backgroundColor: "#4CAF50",
-                      color: "#FFF",
-                      fontWeight: 600,
-                      fontSize: "0.9rem",
-                    }}
-                  />
-                ))}
-              </Box>
-            </Paper>
-
-            {/* Awards */}
-            <Paper
-              elevation={0}
-              sx={{
-                mb: 4,
-                p: { xs: 3, md: 4 },
-                borderRadius: 3,
-                border: "1px solid #E0E0E0",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <EmojiEventsIcon
-                  sx={{ color: "#FFD700", mr: 1, fontSize: 28 }}
-                />
                 <Typography
                   variant="h5"
-                  sx={{ color: "#2E7D32", fontWeight: 700 }}
+                  sx={{ color: "#2E7D32", fontWeight: 700, mb: 3 }}
                 >
-                  Penghargaan
+                  Jadwal Praktik
                 </Typography>
-              </Box>
-              <List>
-                {doctor.awards.map((award, index) => (
-                  <ListItem key={index} sx={{ px: 0 }}>
-                    <StarIcon sx={{ color: "#FFD700", mr: 2 }} />
-                    <ListItemText
-                      primary={award}
-                      primaryTypographyProps={{
-                        fontSize: "1rem",
-                        color: "#333",
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Paper>
+                <List>
+                  {scheduleItems.map((item, index) => (
+                    <ListItem key={index} sx={{ px: 0 }}>
+                      <ListItemText
+                        primary={item.day}
+                        secondary={item.time}
+                        primaryTypographyProps={{
+                          fontWeight: 600,
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            )}
           </Grid>
 
           {/* Sidebar */}
           <Grid item xs={12} md={4}>
-            {/* Schedule */}
-            <Card
-              sx={{
-                mb: 3,
-                borderRadius: 3,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <CalendarMonthIcon
-                    sx={{ color: "#4CAF50", mr: 1, fontSize: 28 }}
-                  />
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#2E7D32", fontWeight: 700 }}
-                  >
-                    Jadwal Praktik
-                  </Typography>
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 700 }}>Hari</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Jam</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {doctor.schedule.map((sched, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{sched.day}</TableCell>
-                          <TableCell>{sched.time}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-                <Box
-                  sx={{
-                    mt: 2,
-                    p: 2,
-                    backgroundColor: "#FFF3E0",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography variant="caption" sx={{ color: "#E65100" }}>
-                    *Jadwal dapat berubah sewaktu-waktu
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-
-            {/* Languages */}
-            <Card
-              sx={{
-                mb: 3,
-                borderRadius: 3,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <LanguageIcon
-                    sx={{ color: "#4CAF50", mr: 1, fontSize: 28 }}
-                  />
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#2E7D32", fontWeight: 700 }}
-                  >
-                    Bahasa
-                  </Typography>
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {doctor.languages.map((lang, index) => (
-                    <Chip
-                      key={index}
-                      label={lang}
-                      size="small"
-                      sx={{
-                        backgroundColor: "#E8F5E9",
-                        color: "#2E7D32",
-                      }}
-                    />
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
-
-            {/* Contact */}
+            {/* Contact Card */}
             <Card
               sx={{
                 borderRadius: 3,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -18,6 +18,7 @@ import {
   useMediaQuery,
   useTheme,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
 import WorkIcon from "@mui/icons-material/Work";
@@ -26,136 +27,27 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import SendIcon from "@mui/icons-material/Send";
 import logo from "../assets/logo.png";
+import { jobService, uploadService } from "../utils/api";
 
 const CareersPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [uploading, setUploading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    message: "",
+    cvFile: null,
+    cvUrl: "",
   });
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  const jobOpenings = [
-    {
-      title: "Dokter Spesialis Kandungan",
-      department: "Medis",
-      location: "Batusangkar, Tanah Datar",
-      type: "Full Time",
-      requirements: [
-        "Lulusan Spesialis Obstetri dan Ginekologi",
-        "Memiliki STR dan SIP yang masih berlaku",
-        "Pengalaman minimal 2 tahun",
-        "Mampu bekerja dalam tim",
-        "Berorientasi pada pelayanan pasien",
-      ],
-      responsibilities: [
-        "Melakukan pemeriksaan kehamilan",
-        "Menangani persalinan normal dan operasi",
-        "Memberikan konsultasi kesehatan reproduksi",
-        "Melakukan tindakan medis sesuai kompetensi",
-      ],
-    },
-    {
-      title: "Dokter Spesialis Anak",
-      department: "Medis",
-      location: "Batusangkar, Tanah Datar",
-      type: "Full Time",
-      requirements: [
-        "Lulusan Spesialis Anak",
-        "Memiliki STR dan SIP yang masih berlaku",
-        "Pengalaman minimal 2 tahun",
-        "Komunikatif dan ramah kepada anak-anak",
-        "Mampu bekerja dalam tim",
-      ],
-      responsibilities: [
-        "Melakukan pemeriksaan kesehatan anak",
-        "Memberikan vaksinasi dan imunisasi",
-        "Menangani penyakit anak",
-        "Memberikan edukasi kesehatan kepada orang tua",
-      ],
-    },
-    {
-      title: "Bidan",
-      department: "Kebidanan",
-      location: "Batusangkar, Tanah Datar",
-      type: "Full Time",
-      requirements: [
-        "Pendidikan minimal D3/D4 Kebidanan",
-        "Memiliki STR yang masih berlaku",
-        "Pengalaman minimal 1 tahun",
-        "Terampil dalam asuhan kebidanan",
-        "Mampu bekerja shift",
-      ],
-      responsibilities: [
-        "Memberikan asuhan kebidanan pada ibu hamil",
-        "Membantu proses persalinan",
-        "Merawat ibu dan bayi post partum",
-        "Melakukan kunjungan rumah",
-      ],
-    },
-    {
-      title: "Perawat",
-      department: "Keperawatan",
-      location: "Batusangkar, Tanah Datar",
-      type: "Full Time",
-      requirements: [
-        "Pendidikan minimal D3 Keperawatan",
-        "Memiliki STR yang masih berlaku",
-        "Pengalaman minimal 1 tahun",
-        "Mampu bekerja dalam tim",
-        "Bersedia bekerja shift",
-      ],
-      responsibilities: [
-        "Memberikan asuhan keperawatan",
-        "Melakukan tindakan keperawatan",
-        "Mendokumentasikan pelayanan",
-        "Berkolaborasi dengan tim medis",
-      ],
-    },
-    {
-      title: "Apoteker",
-      department: "Farmasi",
-      location: "Batusangkar, Tanah Datar",
-      type: "Full Time",
-      requirements: [
-        "Lulusan S1 Farmasi dan Profesi Apoteker",
-        "Memiliki STRA yang masih berlaku",
-        "Pengalaman minimal 1 tahun",
-        "Menguasai sistem informasi farmasi",
-        "Teliti dan bertanggung jawab",
-      ],
-      responsibilities: [
-        "Mengelola pelayanan farmasi",
-        "Melakukan dispensing obat",
-        "Memberikan informasi obat",
-        "Melakukan monitoring efek samping obat",
-      ],
-    },
-    {
-      title: "Analis Laboratorium",
-      department: "Laboratorium",
-      location: "Batusangkar, Tanah Datar",
-      type: "Full Time",
-      requirements: [
-        "Pendidikan minimal D3 Analis Kesehatan",
-        "Memiliki STR yang masih berlaku",
-        "Pengalaman minimal 1 tahun",
-        "Menguasai alat-alat laboratorium",
-        "Teliti dan akurat",
-      ],
-      responsibilities: [
-        "Melakukan pemeriksaan laboratorium",
-        "Mengoperasikan alat laboratorium",
-        "Membuat laporan hasil pemeriksaan",
-        "Melakukan quality control",
-      ],
-    },
-  ];
 
   const benefits = [
     {
@@ -181,7 +73,7 @@ const CareersPage = () => {
     {
       title: "Cuti Tahunan",
       description: "Cuti tahunan dan cuti besar sesuai ketentuan",
-      icon: "🏖️",
+      icon: "🖍️",
     },
     {
       title: "Bonus Kinerja",
@@ -190,29 +82,130 @@ const CareersPage = () => {
     },
   ];
 
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const response = await jobService.getAll();
+      if (response.data.success) {
+        // Filter only active jobs for public view
+        const activeJobs = response.data.data.filter(
+          (job) => job.status === "Active"
+        );
+        setJobs(activeJobs);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Error fetching jobs:", err);
+      setError("Gagal memuat data lowongan. Silakan coba lagi nanti.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenDialog = (job) => {
     setSelectedJob(job);
     setOpenDialog(true);
+    setSubmitSuccess(false);
+    setSubmitError("");
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedJob(null);
     setSubmitSuccess(false);
+    setSubmitError("");
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      cvFile: null,
+      cvUrl: "",
+    });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Application submitted:", {
-      ...formData,
-      job: selectedJob.title,
-    });
-    setSubmitSuccess(true);
-    setTimeout(() => {
-      handleCloseDialog();
-      setFormData({ name: "", email: "", phone: "", message: "" });
-    }, 2000);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setSubmitError("Ukuran file maksimal 5MB");
+        return;
+      }
+
+      try {
+        setUploading(true);
+        setSubmitError("");
+        const response = await uploadService.uploadFile(file);
+
+        if (response.data.success) {
+          setFormData({
+            ...formData,
+            cvFile: file,
+            cvUrl: response.data.data.url,
+          });
+        }
+      } catch (err) {
+        console.error("Error uploading file:", err);
+        setSubmitError("Gagal mengupload file. Silakan coba lagi.");
+      } finally {
+        setUploading(false);
+      }
+    }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.cvUrl) {
+      setSubmitError("Mohon upload CV Anda terlebih dahulu");
+      return;
+    }
+
+    try {
+      const applicationData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        jobId: selectedJob.id,
+        cvUrl: formData.cvUrl,
+      };
+
+      const response = await jobService.apply(applicationData);
+
+      if (response.data.success) {
+        setSubmitSuccess(true);
+        setSubmitError("");
+        setTimeout(() => {
+          handleCloseDialog();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Error submitting application:", err);
+      setSubmitError(
+        err.response?.data?.error ||
+          "Gagal mengirim lamaran. Silakan coba lagi."
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#FAFAFA",
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: "#4CAF50" }} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ backgroundColor: "#FAFAFA", minHeight: "100vh" }}>
@@ -295,6 +288,12 @@ const CareersPage = () => {
       </Box>
 
       <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
+        )}
+
         {/* Benefits Section */}
         <Paper
           elevation={0}
@@ -368,85 +367,123 @@ const CareersPage = () => {
           Lowongan Tersedia
         </Typography>
 
-        <Grid container spacing={4}>
-          {jobOpenings.map((job, index) => (
-            <Grid item xs={12} md={6} key={index}>
-              <Card
-                sx={{
-                  height: "100%",
-                  borderRadius: 4,
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-8px)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
-                  },
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box
-                    sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}
-                  >
-                    <WorkIcon sx={{ fontSize: 40, color: "#4CAF50", mr: 2 }} />
-                    <Box sx={{ flex: 1 }}>
-                      <Typography
-                        variant="h5"
-                        sx={{ color: "#2E7D32", fontWeight: 700, mb: 1 }}
+        {jobs.length === 0 ? (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 6,
+              textAlign: "center",
+              borderRadius: 4,
+              backgroundColor: "#F5F5F5",
+            }}
+          >
+            <Typography variant="h6" color="text.secondary">
+              Saat ini belum ada lowongan yang tersedia.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Silakan cek kembali nanti untuk informasi lowongan terbaru.
+            </Typography>
+          </Paper>
+        ) : (
+          <Grid container spacing={4}>
+            {jobs.map((job, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <Card
+                  sx={{
+                    height: "100%",
+                    borderRadius: 4,
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-8px)",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 4 }}>
+                    <Box
+                      sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}
+                    >
+                      <WorkIcon
+                        sx={{ fontSize: 40, color: "#4CAF50", mr: 2 }}
+                      />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant="h5"
+                          sx={{ color: "#2E7D32", fontWeight: 700, mb: 1 }}
+                        >
+                          {job.title}
+                        </Typography>
+                        <Chip
+                          label={job.department}
+                          size="small"
+                          sx={{
+                            backgroundColor: "#E8F5E9",
+                            color: "#2E7D32",
+                            fontWeight: 600,
+                          }}
+                        />
+                      </Box>
+                    </Box>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Box sx={{ mb: 3 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
                       >
-                        {job.title}
-                      </Typography>
-                      <Chip
-                        label={job.department}
-                        size="small"
-                        sx={{
-                          backgroundColor: "#E8F5E9",
-                          color: "#2E7D32",
-                          fontWeight: 600,
-                        }}
-                      />
+                        <LocationOnIcon
+                          sx={{ fontSize: 20, color: "#666", mr: 1 }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          {job.location}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <AccessTimeIcon
+                          sx={{ fontSize: 20, color: "#666", mr: 1 }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          {job.type}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
 
-                  <Divider sx={{ my: 2 }} />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mb: 3,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                      }}
+                    >
+                      {job.description}
+                    </Typography>
 
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                      <LocationOnIcon
-                        sx={{ fontSize: 20, color: "#666", mr: 1 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {job.location}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <AccessTimeIcon
-                        sx={{ fontSize: 20, color: "#666", mr: 1 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {job.type}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    onClick={() => handleOpenDialog(job)}
-                    sx={{
-                      borderRadius: 2,
-                      py: 1.5,
-                      fontWeight: 600,
-                      fontSize: "1rem",
-                    }}
-                  >
-                    Lamar Sekarang
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      onClick={() => handleOpenDialog(job)}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 600,
+                        fontSize: "1rem",
+                      }}
+                    >
+                      Lamar Sekarang
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Container>
 
       {/* Application Dialog */}
@@ -470,45 +507,26 @@ const CareersPage = () => {
             </Alert>
           ) : (
             <>
+              {submitError && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  {submitError}
+                </Alert>
+              )}
+
               {selectedJob && (
                 <Box sx={{ mb: 4 }}>
                   <Typography
                     variant="h6"
                     sx={{ color: "#2E7D32", mb: 2, fontWeight: 600 }}
                   >
-                    Persyaratan:
+                    Deskripsi Pekerjaan:
                   </Typography>
-                  <Box component="ul" sx={{ pl: 3 }}>
-                    {selectedJob.requirements.map((req, idx) => (
-                      <Typography
-                        component="li"
-                        key={idx}
-                        variant="body2"
-                        sx={{ mb: 1 }}
-                      >
-                        {req}
-                      </Typography>
-                    ))}
-                  </Box>
-
                   <Typography
-                    variant="h6"
-                    sx={{ color: "#2E7D32", mt: 3, mb: 2, fontWeight: 600 }}
+                    variant="body2"
+                    sx={{ mb: 2, whiteSpace: "pre-line" }}
                   >
-                    Tanggung Jawab:
+                    {selectedJob.description}
                   </Typography>
-                  <Box component="ul" sx={{ pl: 3 }}>
-                    {selectedJob.responsibilities.map((resp, idx) => (
-                      <Typography
-                        component="li"
-                        key={idx}
-                        variant="body2"
-                        sx={{ mb: 1 }}
-                      >
-                        {resp}
-                      </Typography>
-                    ))}
-                  </Box>
                 </Box>
               )}
 
@@ -546,26 +564,36 @@ const CareersPage = () => {
                   margin="normal"
                   required
                 />
-                <TextField
-                  fullWidth
-                  label="Pesan / Cover Letter"
-                  value={formData.message}
-                  onChange={(e) =>
-                    setFormData({ ...formData, message: e.target.value })
-                  }
-                  margin="normal"
-                  multiline
-                  rows={4}
-                />
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<AttachFileIcon />}
-                  sx={{ mt: 2, mb: 3 }}
-                >
-                  Upload CV (PDF/DOC)
-                  <input type="file" hidden accept=".pdf,.doc,.docx" />
-                </Button>
+                <Box sx={{ mt: 2, mb: 3 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<AttachFileIcon />}
+                    disabled={uploading}
+                    fullWidth
+                  >
+                    {uploading
+                      ? "Mengupload..."
+                      : formData.cvFile
+                      ? formData.cvFile.name
+                      : "Upload CV (PDF/DOC, Max 5MB)"}
+                    <input
+                      type="file"
+                      hidden
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                    />
+                  </Button>
+                  {formData.cvUrl && (
+                    <Typography
+                      variant="caption"
+                      color="success.main"
+                      sx={{ mt: 1, display: "block" }}
+                    >
+                      ✓ CV berhasil diupload
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             </>
           )}
@@ -580,6 +608,7 @@ const CareersPage = () => {
               variant="contained"
               color="primary"
               startIcon={<SendIcon />}
+              disabled={uploading || !formData.cvUrl}
             >
               Kirim Lamaran
             </Button>
