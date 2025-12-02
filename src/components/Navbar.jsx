@@ -10,7 +10,9 @@ import {
   ListItem,
   ListItemText,
   Box,
-  Menu,
+  Popper,
+  Paper,
+  ClickAwayListener,
   MenuItem,
   useMediaQuery,
   useTheme,
@@ -20,32 +22,35 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAuth } from "../context/AuthContext";
 import AppointmentModal from "./AppointmentModal";
-import LoginModal from "./LoginModal";
+import LoginModal from "./LoginModal"; // KEMBALI DI-IMPORT
 import logo from "../assets/logo.png";
 
 const Navbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  // State
   const [mobileOpen, setMobileOpen] = useState(false);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false); // DIBALIKKAN
   const [scrolled, setScrolled] = useState(false);
-  const [perusahaanAnchorEl, setPerusahaanAnchorEl] = useState(null);
-  const [layananAnchorEl, setLayananAnchorEl] = useState(null);
+
+  // Dropdown state
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
   const { isLoggedIn } = useAuth();
 
+  // Scroll handler
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
+  // Pendaftaran → kalau belum login, buka LoginModal dulu
   const handleAppointment = () => {
     if (!isLoggedIn) {
       setLoginOpen(true);
@@ -54,27 +59,24 @@ const Navbar = () => {
     }
   };
 
-  const handlePerusahaanMenuOpen = (event) => {
-    setPerusahaanAnchorEl(event.currentTarget);
+  // Dropdown handlers
+  const openDropdown = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setActiveDropdown(id);
+  };
+  const closeDropdown = () => {
+    setAnchorEl(null);
+    setActiveDropdown(null);
   };
 
-  const handlePerusahaanMenuClose = () => {
-    setPerusahaanAnchorEl(null);
-  };
-
-  const handleLayananMenuOpen = (event) => {
-    setLayananAnchorEl(event.currentTarget);
-  };
-
-  const handleLayananMenuClose = () => {
-    setLayananAnchorEl(null);
-  };
-
+  // Menu items (Beranda ditambah, Hubungi Kami & Login button dihapus)
   const menuItems = [
+    { text: "Beranda", path: "/" },
     { text: "Temukan Dokter", path: "/doctors" },
     {
       text: "Perusahaan",
-      dropdown: [
+      id: "perusahaan",
+      items: [
         { text: "Tentang rumah sakit Sayang Ibu", path: "/about" },
         { text: "Manajemen Kami", path: "/management" },
         { text: "Karir", path: "/careers" },
@@ -82,7 +84,8 @@ const Navbar = () => {
     },
     {
       text: "Layanan",
-      dropdown: [
+      id: "layanan",
+      items: [
         { text: "Kebidanan dan Kandungan", path: "/services/obstetrics" },
         { text: "Dokter Anak", path: "/services/pediatrics" },
         { text: "Dokter Penyakit Dalam", path: "/services/internal-medicine" },
@@ -95,17 +98,15 @@ const Navbar = () => {
         { text: "Ambulance", path: "/services/ambulance" },
       ],
     },
-    { text: "Hubungi Kami", path: "/contact" },
   ];
 
-  const drawerWidth = "100vw";
-
+  // Mobile drawer (sama seperti sebelumnya)
   const drawer = (
     <Box
       sx={{
         p: 3,
         height: "100vh",
-        backgroundColor: "#FFFFFF",
+        bgcolor: "#fff",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -117,66 +118,52 @@ const Navbar = () => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 3,
+            mb: 4,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <img
               src={logo}
-              alt="Logo rumah sakit Sayang Ibu"
-              style={{ width: 50, height: 50, marginRight: 10 }}
+              alt="Logo"
+              style={{ width: 50, height: 50, mr: 1.5 }}
             />
             <Typography variant="h5" sx={{ color: "#4CAF50", fontWeight: 700 }}>
               Rumah Sakit Sayang Ibu
             </Typography>
           </Box>
-          <IconButton
-            onClick={handleDrawerToggle}
-            sx={{ color: "#4CAF50" }}
-            aria-label="close drawer"
-          >
+          <IconButton onClick={handleDrawerToggle} sx={{ color: "#4CAF50" }}>
             <CloseIcon />
           </IconButton>
         </Box>
+
         <List sx={{ px: 1 }}>
-          {menuItems.map((item, index) => (
-            <React.Fragment key={index}>
-              {item.dropdown ? (
+          {menuItems.map((item) => (
+            <React.Fragment key={item.text}>
+              {item.items ? (
                 <>
-                  <ListItem
-                    sx={{
-                      py: 1.5,
-                      borderBottom: "1px solid #E0E0E0",
-                      "&:hover": { backgroundColor: "#F5F5F5" },
-                    }}
-                  >
+                  <ListItem sx={{ py: 1.8, borderBottom: "1px solid #eee" }}>
                     <ListItemText
                       primary={item.text}
                       primaryTypographyProps={{
                         fontWeight: 600,
+                        fontSize: "1.15rem",
                         color: "#333",
-                        fontSize: "1.1rem",
                       }}
                     />
                   </ListItem>
-                  {item.dropdown.map((subItem, subIndex) => (
+                  {item.items.map((sub) => (
                     <ListItem
-                      key={subIndex}
+                      key={sub.text}
                       component={Link}
-                      to={subItem.path}
+                      to={sub.path}
                       onClick={handleDrawerToggle}
-                      sx={{
-                        pl: 4,
-                        py: 1,
-                        "&:hover": { backgroundColor: "#F5F5F5" },
-                      }}
+                      sx={{ pl: 4, py: 1.2 }}
                     >
                       <ListItemText
-                        primary={subItem.text}
+                        primary={sub.text}
                         primaryTypographyProps={{
-                          fontWeight: 400,
-                          color: "#333",
                           fontSize: "1rem",
+                          color: "#555",
                         }}
                       />
                     </ListItem>
@@ -187,18 +174,14 @@ const Navbar = () => {
                   component={Link}
                   to={item.path}
                   onClick={handleDrawerToggle}
-                  sx={{
-                    py: 1.5,
-                    borderBottom: "1px solid #E0E0E0",
-                    "&:hover": { backgroundColor: "#F5F5F5" },
-                  }}
+                  sx={{ py: 1.8, borderBottom: "1px solid #eee" }}
                 >
                   <ListItemText
                     primary={item.text}
                     primaryTypographyProps={{
                       fontWeight: 600,
+                      fontSize: "1.15rem",
                       color: "#333",
-                      fontSize: "1.1rem",
                     }}
                   />
                 </ListItem>
@@ -207,78 +190,68 @@ const Navbar = () => {
           ))}
         </List>
       </Box>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, px: 1 }}>
-        <Button
-          onClick={() => {
-            setLoginOpen(true);
-            setMobileOpen(false);
-          }}
-          variant="contained"
-          color="primary"
-          sx={{
-            width: "100%",
-            borderRadius: 20,
-            py: 1.5,
-            fontSize: "1rem",
-            fontWeight: 600,
-            textTransform: "none",
-            "&:hover": { backgroundColor: "#43A047" },
-          }}
-        >
-          Login
-        </Button>
+
+      <Box sx={{ px: 1, pb: 3 }}>
         <Button
           onClick={handleAppointment}
           variant="contained"
-          color="primary"
+          fullWidth
           sx={{
-            width: "100%",
             borderRadius: 20,
-            py: 1.5,
-            fontSize: "1rem",
+            py: 2,
+            fontSize: "1.15rem",
             fontWeight: 600,
-            textTransform: "none",
-            "&:hover": { backgroundColor: "#43A047" },
+            bgcolor: "#4CAF50",
+            "&:hover": { bgcolor: "#43A047" },
           }}
         >
-          Buat Janji Temu
+          Pendaftaran Online
         </Button>
       </Box>
     </Box>
   );
 
-  const navbarBackground = scrolled || isMobile ? "#FFFFFF" : "transparent";
-  const logoBackground = scrolled || isMobile ? "transparent" : "#FFFFFF";
-  const menuIconColor = scrolled || isMobile ? "#333" : "#FFFFFF";
-  const menuTextColor = scrolled ? "#2E7D32" : "#FFFFFF";
+  // Warna berdasarkan scroll
+  const navbarBg = scrolled || isMobile ? "#FFFFFF" : "transparent";
+  const logoBg = scrolled || isMobile ? "transparent" : "#FFFFFF";
+  const textColor = scrolled && !isMobile ? "#2E7D32" : "#FFFFFF";
+  const iconColor = scrolled || isMobile ? "#333" : "#FFFFFF";
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <>
       <AppBar
         position="fixed"
         sx={{
-          backgroundColor: navbarBackground,
-          color: "#333",
+          bgcolor: navbarBg,
           boxShadow:
-            scrolled || isMobile ? "0 2px 10px rgba(0,0,0,0.05)" : "none",
-          transition: "background-color 0.3s ease, box-shadow 0.3s ease",
+            scrolled || isMobile ? "0 2px 15px rgba(0,0,0,0.08)" : "none",
+          transition: "all 0.35s ease",
+          backdropFilter: scrolled ? "blur(10px)" : "none",
         }}
       >
-        <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, md: 4 } }}>
+        <Toolbar
+          sx={{
+            justifyContent: "space-between",
+            px: { xs: 2, md: 5 },
+            minHeight: { xs: 70, md: 90 },
+          }}
+        >
+          {/* Logo */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              backgroundColor: logoBackground,
-              borderRadius: scrolled || isMobile ? 0 : 20,
-              px: scrolled || isMobile ? 0 : 2,
+              bgcolor: logoBg,
+              borderRadius: scrolled || isMobile ? 0 : 30,
+              px: scrolled || isMobile ? 0 : 2.5,
               py: 1,
+              transition: "all 0.3s ease",
             }}
           >
             <img
               src={logo}
-              alt="Logo rumah sakit Sayang Ibu"
-              style={{ width: 40, height: 40, marginRight: 10 }}
+              alt="Logo"
+              style={{ width: 42, height: 42, mr: 1.5 }}
             />
             <Typography
               variant="h6"
@@ -287,189 +260,165 @@ const Navbar = () => {
               sx={{
                 color: "#4CAF50",
                 textDecoration: "none",
-                fontWeight: 600,
-                fontSize: { xs: "1.2rem", md: "1.5rem" },
+                fontWeight: 700,
+                fontSize: { xs: "1.25rem", md: "1.6rem" },
               }}
             >
               Rumah Sakit Sayang Ibu
             </Typography>
           </Box>
+
+          {/* Desktop Menu */}
           <Box
             sx={{
               display: { xs: "none", md: "flex" },
               alignItems: "center",
-              gap: 3,
+              gap: 5,
             }}
           >
-            {menuItems.map((item, index) => (
-              <React.Fragment key={index}>
-                {item.dropdown ? (
-                  <>
-                    <Button
-                      onClick={
-                        item.text === "Perusahaan"
-                          ? handlePerusahaanMenuOpen
-                          : handleLayananMenuOpen
-                      }
-                      sx={{
-                        color: menuTextColor,
-                        fontWeight: 700,
-                        fontSize: "1rem",
-                        textTransform: "none",
-                        "&:hover": {
-                          color: "#4CAF50",
-                          backgroundColor: scrolled
-                            ? "#F5F5F5"
-                            : "rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                        },
-                      }}
-                    >
-                      {item.text}
-                    </Button>
-                    <Menu
-                      anchorEl={
-                        item.text === "Perusahaan"
-                          ? perusahaanAnchorEl
-                          : layananAnchorEl
-                      }
-                      open={Boolean(
-                        item.text === "Perusahaan"
-                          ? perusahaanAnchorEl
-                          : layananAnchorEl
-                      )}
-                      onClose={
-                        item.text === "Perusahaan"
-                          ? handlePerusahaanMenuClose
-                          : handleLayananMenuClose
-                      }
-                      PaperProps={{
-                        sx: {
-                          borderRadius: "4px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        },
-                      }}
-                    >
-                      {item.dropdown.map((subItem, subIndex) => (
-                        <MenuItem
-                          key={subIndex}
-                          component={Link}
-                          to={subItem.path}
-                          onClick={
-                            item.text === "Perusahaan"
-                              ? handlePerusahaanMenuClose
-                              : handleLayananMenuClose
-                          }
-                          sx={{
-                            color: "#333",
-                            "&:hover": {
-                              backgroundColor: "#E8F5E9",
-                              color: "#4CAF50",
-                            },
-                          }}
-                        >
-                          {subItem.text}
-                        </MenuItem>
-                      ))}
-                    </Menu>
-                  </>
-                ) : (
+            {menuItems.map((item) =>
+              item.items ? (
+                <Box key={item.id}>
                   <Button
-                    component={Link}
-                    to={item.path}
+                    onClick={(e) => openDropdown(e, item.id)}
                     sx={{
-                      color: menuTextColor,
+                      color: textColor,
                       fontWeight: 700,
-                      fontSize: "1rem",
+                      fontSize: "1.05rem",
                       textTransform: "none",
-                      "&:hover": {
-                        color: "#4CAF50",
-                        backgroundColor: scrolled
-                          ? "#F5F5F5"
-                          : "rgba(255,255,255,0.1)",
-                        borderRadius: 10,
-                      },
+                      px: 2,
+                      "&:hover": { color: "#4CAF50" },
                     }}
                   >
                     {item.text}
                   </Button>
-                )}
-              </React.Fragment>
-            ))}
-            <Button
-              onClick={() => setLoginOpen(true)}
-              variant="contained"
-              color="primary"
-              sx={{
-                ml: 2,
-                borderRadius: 20,
-                px: 4,
-                py: 1,
-                fontWeight: 600,
-                fontSize: "1rem",
-                color: "#FFFFFF",
-                "&:hover": { backgroundColor: "#43A047" },
-              }}
-            >
-              Login
-            </Button>
+
+                  <Popper
+                    open={activeDropdown === item.id}
+                    anchorEl={anchorEl}
+                    placement="bottom-start"
+                    disablePortal
+                    modifiers={[
+                      { name: "offset", options: { offset: [0, 8] } },
+                    ]}
+                    sx={{ zIndex: 1400 }}
+                  >
+                    {() => (
+                      <ClickAwayListener onClickAway={closeDropdown}>
+                        <Paper
+                          elevation={12}
+                          sx={{
+                            mt: 1,
+                            minWidth: 260,
+                            borderRadius: 3,
+                            overflow: "hidden",
+                            transform: "none !important",
+                            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                          }}
+                        >
+                          {item.items.map((sub) => (
+                            <MenuItem
+                              key={sub.text}
+                              component={Link}
+                              to={sub.path}
+                              onClick={closeDropdown}
+                              sx={{
+                                py: 1.8,
+                                px: 3,
+                                fontSize: "0.98rem",
+                                fontWeight: 500,
+                                "&:hover": {
+                                  bgcolor: "#E8F5E9",
+                                  color: "#2E7D32",
+                                  pl: 4,
+                                },
+                              }}
+                            >
+                              {sub.text}
+                            </MenuItem>
+                          ))}
+                        </Paper>
+                      </ClickAwayListener>
+                    )}
+                  </Popper>
+                </Box>
+              ) : (
+                <Button
+                  key={item.text}
+                  component={Link}
+                  to={item.path}
+                  sx={{
+                    color: textColor,
+                    fontWeight: 700,
+                    fontSize: "1.05rem",
+                    textTransform: "none",
+                    px: 2,
+                    "&:hover": { color: "#4CAF50" },
+                  }}
+                >
+                  {item.text}
+                </Button>
+              )
+            )}
+
+            {/* Hanya tombol Pendaftaran */}
             <Button
               onClick={handleAppointment}
               variant="contained"
-              color="primary"
               sx={{
-                ml: 2,
-                borderRadius: 20,
-                px: 4,
-                py: 1,
-                fontWeight: 600,
-                fontSize: "1rem",
-                color: "#FFFFFF",
-                "&:hover": { backgroundColor: "#43A047" },
+                ml: 4,
+                borderRadius: 30,
+                px: 5,
+                py: 1.5,
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                bgcolor: "#4CAF50",
+                "&:hover": { bgcolor: "#43A047" },
+                boxShadow: "0 6px 20px rgba(76,175,80,0.3)",
               }}
             >
-              Buat Janji Temu
+              Pendaftaran
             </Button>
           </Box>
+
+          {/* Mobile hamburger */}
           <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="end"
             onClick={handleDrawerToggle}
-            sx={{ display: { md: "none" }, color: menuIconColor }}
+            sx={{ display: { md: "none" }, color: iconColor }}
           >
-            <MenuIcon />
+            <MenuIcon sx={{ fontSize: 32 }} />
           </IconButton>
         </Toolbar>
       </AppBar>
+
+      {/* Mobile Drawer */}
       <Drawer
         anchor="right"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         sx={{
           display: { xs: "block", md: "none" },
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-            transition: "transform 0.3s ease-in-out",
-          },
+          "& .MuiDrawer-paper": { width: "100vw", boxSizing: "border-box" },
         }}
       >
         {drawer}
       </Drawer>
+
+      {/* Modals – KEDUANYA TETAP ADA */}
       <AppointmentModal
         open={appointmentOpen}
         onClose={() => setAppointmentOpen(false)}
       />
+
       <LoginModal
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
         onLoginSuccess={() => {
           setLoginOpen(false);
-          setAppointmentOpen(true);
+          setAppointmentOpen(true); // Setelah login berhasil langsung buka pendaftaran
         }}
       />
-    </Box>
+    </>
   );
 };
 

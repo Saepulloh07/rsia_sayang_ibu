@@ -225,7 +225,7 @@ const DoctorProfilePage = () => {
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Rating value={4.8} precision={0.1} readOnly />
                 <Typography sx={{ ml: 1, fontWeight: 600 }}>
-                  4.8 (Ulasan Pasien)
+                  (Ulasan Pasien)
                 </Typography>
               </Box>
               <Button

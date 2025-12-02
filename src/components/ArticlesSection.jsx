@@ -59,21 +59,20 @@ const ArticlesSection = () => {
     return (
       <Box
         sx={{
-          py: { xs: 6, md: 8 },
-          backgroundColor: "#F8F9FA",
+          py: { xs: 8, md: 12 },
+          bgcolor: "#f8f9fa",
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",
         }}
       >
-        <CircularProgress size={60} sx={{ color: "#4CAF50" }} />
+        <CircularProgress size={60} sx={{ color: "#2e7d32" }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ py: { xs: 6, md: 8 }, backgroundColor: "#F8F9FA" }}>
+      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "#f8f9fa" }}>
         <Container maxWidth="lg">
           <Alert severity="error">{error}</Alert>
         </Container>
@@ -81,27 +80,26 @@ const ArticlesSection = () => {
     );
   }
 
-  if (articles.length === 0) {
-    return null;
-  }
+  if (articles.length === 0) return null;
 
   return (
-    <Box sx={{ py: { xs: 6, md: 8 }, backgroundColor: "#F8F9FA" }}>
+    <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "#f8f9fa" }}>
       <Helmet>
         <meta
           name="keywords"
-          content="artikel kesehatan, tips kesehatan ibu dan anak, berita rsia sayang ibu"
+          content="artikel kesehatan, tips ibu dan anak, rsia sayang ibu"
         />
       </Helmet>
+
       <Container maxWidth="lg">
         <Typography
           variant="h3"
           align="center"
           sx={{
             mb: 2,
-            color: "#4CAF50",
+            color: "#1b5e20",
             fontWeight: 700,
-            fontSize: { xs: "2rem", md: "3rem" },
+            fontSize: { xs: "2.2rem", md: "3.2rem" },
           }}
         >
           Artikel Kesehatan Terbaru
@@ -110,60 +108,92 @@ const ArticlesSection = () => {
           variant="body1"
           align="center"
           sx={{
-            mb: { xs: 4, md: 6 },
+            mb: { xs: 6, md: 8 },
             color: "#555",
-            maxWidth: 700,
+            maxWidth: 720,
             mx: "auto",
+            fontSize: "1.1rem",
           }}
         >
-          Baca artikel terbaru seputar kesehatan ibu dan anak dari para ahli
-          kami
+          Dapatkan informasi terpercaya seputar kesehatan ibu hamil, menyusui,
+          dan tumbuh kembang anak dari tim medis kami.
         </Typography>
 
-        <Grid container spacing={4}>
+        {/* Grid dengan teknik 100% rata tinggi di desktop */}
+        <Grid
+          container
+          spacing={4}
+          sx={{
+            display: { xs: "flex", md: "grid" },
+            gridTemplateColumns: { md: "repeat(3, 1fr)" },
+            gap: { md: "2rem" },
+          }}
+        >
           {articles.map((article) => (
-            <Grid item xs={12} md={4} key={article.id}>
+            <Grid
+              item
+              xs={12}
+              md={4}
+              key={article.id}
+              sx={{
+                height: { md: "100%" },
+                display: "flex",
+              }}
+            >
               <Card
                 sx={{
+                  width: "100%",
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
                   borderRadius: 4,
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                  transition: "all 0.3s ease",
+                  overflow: "hidden",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                  transition: "all 0.4s ease",
                   "&:hover": {
-                    transform: "translateY(-8px)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+                    transform: "translateY(-12px)",
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.16)",
                   },
                 }}
               >
                 <CardMedia
                   component="img"
-                  height="200"
+                  height="220"
                   image={
                     article.image ||
-                    "https://via.placeholder.com/400x200?text=Article"
+                    "https://via.placeholder.com/400x220?text=Artikel+Kesehatan"
                   }
                   alt={article.title}
                   sx={{ objectFit: "cover" }}
                 />
-                <CardContent sx={{ flexGrow: 1, p: 3 }}>
+
+                <CardContent
+                  sx={{
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    p: 3,
+                  }}
+                >
                   <Chip
-                    label={article.category}
+                    label={article.category || "Kesehatan"}
                     size="small"
                     sx={{
                       mb: 2,
-                      backgroundColor: "#E8F5E9",
-                      color: "#4CAF50",
+                      bgcolor: "#e8f5e9",
+                      color: "#2e7d32",
                       fontWeight: 600,
+                      alignSelf: "flex-start",
                     }}
                   />
+
                   <Typography
                     variant="h6"
                     sx={{
-                      color: "#333",
-                      fontWeight: 600,
-                      mb: 2,
+                      fontWeight: 700,
+                      color: "#1b5e20",
+                      mb: 1.5,
+                      lineHeight: 1.3,
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
@@ -172,64 +202,69 @@ const ArticlesSection = () => {
                   >
                     {article.title}
                   </Typography>
+
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{
+                      flexGrow: 1,
                       mb: 2,
+                      lineHeight: 1.7,
                       display: "-webkit-box",
                       WebkitLineClamp: 3,
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
                     }}
                   >
-                    {article.content.replace(/<[^>]*>/g, "").substring(0, 150)}
+                    {article.content?.replace(/<[^>]*>/g, "").substring(0, 140)}
                     ...
                   </Typography>
+
                   <Box
                     sx={{
                       display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      mb: 2,
                       flexWrap: "wrap",
+                      gap: 2,
+                      mb: 3,
+                      fontSize: "0.85rem",
+                      color: "#666",
                     }}
                   >
                     <Box
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
-                      <CalendarTodayIcon sx={{ fontSize: 16, color: "#666" }} />
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDate(article.date)}
-                      </Typography>
+                      <CalendarTodayIcon sx={{ fontSize: 16 }} />
+                      <span>{formatDate(article.date)}</span>
                     </Box>
                     <Box
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
-                      <VisibilityIcon sx={{ fontSize: 16, color: "#666" }} />
-                      <Typography variant="caption" color="text.secondary">
-                        {article.views} views
-                      </Typography>
+                      <VisibilityIcon sx={{ fontSize: 16 }} />
+                      <span>{article.views || 0} views</span>
                     </Box>
                     <Box
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
-                      <PersonIcon sx={{ fontSize: 16, color: "#666" }} />
-                      <Typography variant="caption" color="text.secondary">
-                        {article.author}
-                      </Typography>
+                      <PersonIcon sx={{ fontSize: 16 }} />
+                      <span>{article.author || "Tim Medis"}</span>
                     </Box>
                   </Box>
+
+                  {/* Tombol selalu di bawah */}
                   <Button
                     component={Link}
                     to={`/articles/${article.id}`}
-                    variant="outlined"
-                    color="primary"
+                    variant="contained"
                     fullWidth
                     sx={{
+                      mt: "auto",
+                      bgcolor: "#2e7d32",
+                      "&:hover": { bgcolor: "#1b5e20" },
                       borderRadius: 2,
+                      py: 1.4,
                       textTransform: "none",
                       fontWeight: 600,
+                      fontSize: "1rem",
                     }}
                   >
                     Baca Selengkapnya
@@ -240,19 +275,26 @@ const ArticlesSection = () => {
           ))}
         </Grid>
 
-        <Box sx={{ textAlign: "center", mt: 6 }}>
+        {/* Tombol Lihat Semua */}
+        <Box sx={{ textAlign: "center", mt: 8 }}>
           <Button
             component={Link}
             to="/articles"
-            variant="contained"
-            color="primary"
+            variant="outlined"
             size="large"
             sx={{
+              borderColor: "#2e7d32",
+              color: "#2e7d32",
               borderRadius: 30,
               px: 6,
-              py: 1.5,
+              py: 1.6,
               fontWeight: 600,
-              fontSize: "1rem",
+              fontSize: "1.1rem",
+              "&:hover": {
+                bgcolor: "#2e7d32",
+                color: "#fff",
+                borderColor: "#2e7d32",
+              },
             }}
           >
             Lihat Semua Artikel

@@ -1,5 +1,5 @@
 // src/components/DoctorsSection.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -7,6 +7,8 @@ import {
   Button,
   useMediaQuery,
   useTheme,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
 import { Carousel } from "react-responsive-carousel";
@@ -16,46 +18,89 @@ import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import PregnantWomanIcon from "@mui/icons-material/PregnantWoman";
 import ChildFriendlyIcon from "@mui/icons-material/ChildFriendly";
 import logo from "../assets/logo.png";
-import doctorImage1 from "../assets/doctor1.jpg";
-import doctorImage2 from "../assets/doctor1.jpg";
-import doctorImage3 from "../assets/doctor1.jpg";
-
-const doctors = [
-  {
-    name: "dr. Doddy Pratama, Sp.OG",
-    specialty: "Spesialis Obstetri dan Ginekologi",
-    description:
-      "Dengan pengalaman lebih dari 15 tahun, Dr. Andi fokus pada persalinan aman dan perawatan kehamilan di RSIA Sayang Ibu.",
-    image: doctorImage1,
-    alt: "Dr. Andi Wijaya, Spesialis Kandungan di RSIA Sayang Ibu",
-    icon: <PregnantWomanIcon sx={{ fontSize: 40, color: "#E91E63" }} />,
-    slug: "andi-wijaya",
-  },
-  {
-    name: "Dr. Budi Santoso, Sp.A",
-    specialty: "Spesialis Anak",
-    description:
-      "Ahli kesehatan anak, imunisasi, dan perawatan neonatal di rumah sakit bersalin RSIA Sayang Ibu Tanah Datar.",
-    image: doctorImage2,
-    alt: "Dokter Budi Santoso, Spesialis Anak di RSIA Sayang Ibu",
-    icon: <ChildFriendlyIcon sx={{ fontSize: 40, color: "#E91E63" }} />,
-    slug: "budi-santoso",
-  },
-  {
-    name: "Dr. Citra Dewi, Sp.OG",
-    specialty: "Spesialis Kandungan",
-    description:
-      "Fokus pada konsultasi maternitas dan USG kehamilan untuk ibu di Sumatera Barat.",
-    image: doctorImage3,
-    alt: "Dokter Citra Dewi, Spesialis Kandungan di RSIA Sayang Ibu",
-    icon: <MedicalServicesIcon sx={{ fontSize: 40, color: "#E91E63" }} />,
-    slug: "citra-dewi",
-  },
-];
+import { doctorService } from "../utils/api";
 
 const DoctorsSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  const fetchDoctors = async () => {
+    try {
+      setLoading(true);
+      const response = await doctorService.getAll();
+
+      if (response.data.success) {
+        // Ambil 6 dokter pertama untuk ditampilkan di section
+        const doctorsData = response.data.data.slice(0, 6);
+        setDoctors(doctorsData);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Error fetching doctors:", err);
+      setError("Gagal memuat data dokter. Silakan coba lagi nanti.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getIconBySpecialty = (specialist) => {
+    const specialistLower = specialist.toLowerCase();
+
+    if (
+      specialistLower.includes("kandungan") ||
+      specialistLower.includes("obstetr") ||
+      specialistLower.includes("og")
+    ) {
+      return <PregnantWomanIcon sx={{ fontSize: 40, color: "#E91E63" }} />;
+    } else if (
+      specialistLower.includes("anak") ||
+      specialistLower.includes("pediatr")
+    ) {
+      return <ChildFriendlyIcon sx={{ fontSize: 40, color: "#E91E63" }} />;
+    }
+    return <MedicalServicesIcon sx={{ fontSize: 40, color: "#E91E63" }} />;
+  };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          py: { xs: 6, md: 8 },
+          backgroundColor: "#F8F9FA",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: "#4CAF50" }} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ py: { xs: 6, md: 8 }, backgroundColor: "#F8F9FA" }}>
+        <Container maxWidth="lg">
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
+        </Container>
+      </Box>
+    );
+  }
+
+  if (doctors.length === 0) {
+    return null;
+  }
 
   return (
     <Box sx={{ py: { xs: 6, md: 8 }, backgroundColor: "#F8F9FA" }}>
@@ -126,12 +171,11 @@ const DoctorsSection = () => {
             sx={{
               flex: { xs: "0 0 100%", md: "0 0 65%" },
               width: "100%",
-              // Trik spacing antar slide
               ".carousel .slider-wrapper": {
                 padding: isMobile ? "0 16px" : "0 40px",
               },
               ".carousel .slide": {
-                padding: "0 12px", // jarak antar card
+                padding: "0 12px",
               },
             }}
           >
@@ -150,7 +194,7 @@ const DoctorsSection = () => {
             >
               {doctors.map((doctor, index) => (
                 <Box
-                  key={index}
+                  key={doctor.id || index}
                   component={Link}
                   to={`/doctors/${doctor.slug}`}
                   sx={{
@@ -166,7 +210,7 @@ const DoctorsSection = () => {
                     maxWidth: 360,
                     height: 420,
                     backgroundColor: "#FFFFFF",
-                    mx: "auto", // biar card di tengah
+                    mx: "auto",
                   }}
                 >
                   {/* Logo RSIA */}
@@ -189,18 +233,25 @@ const DoctorsSection = () => {
                   </Box>
                   {/* Foto Dokter */}
                   <img
-                    src={doctor.image}
-                    alt={doctor.alt}
+                    src={
+                      doctor.photo ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        doctor.name
+                      )}&size=360&background=4CAF50&color=fff`
+                    }
+                    alt={`${doctor.name} - ${doctor.specialist}`}
                     style={{
                       width: "100%",
-                      height: 200,
+                      height: 300,
                       objectFit: "cover",
-                      objectPosition: "center",
+                      objectPosition: "top center",
                     }}
                   />
                   {/* Konten Card */}
                   <Box sx={{ p: 2.5, textAlign: "center" }}>
-                    <Box sx={{ mb: 1 }}>{doctor.icon}</Box>
+                    <Box sx={{ mb: 1 }}>
+                      {getIconBySpecialty(doctor.specialist)}
+                    </Box>
                     <Typography
                       variant="h6"
                       sx={{
@@ -215,14 +266,23 @@ const DoctorsSection = () => {
                       variant="subtitle2"
                       sx={{ color: "#4CAF50", mb: 1, fontSize: "0.9rem" }}
                     >
-                      {doctor.specialty}
+                      {doctor.specialist}
                     </Typography>
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ fontSize: "0.85rem", lineHeight: 1.4 }}
+                      sx={{
+                        fontSize: "0.85rem",
+                        lineHeight: 1.4,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                      }}
                     >
-                      {doctor.description}
+                      {doctor.bio ||
+                        `${doctor.name} adalah dokter spesialis ${doctor.specialist} yang berpengalaman di RSIA Sayang Ibu.`}
                     </Typography>
                   </Box>
                 </Box>
