@@ -208,7 +208,7 @@ const DoctorsSection = () => {
                     "&:hover": { transform: "scale(1.03)" },
                     width: "100%",
                     maxWidth: 360,
-                    height: 420,
+                    height: 480,
                     backgroundColor: "#FFFFFF",
                     mx: "auto",
                   }}

@@ -1,9 +1,8 @@
-// src/utils/api.js
+// src/utils/api.js (Dimodifikasi: Tambahkan serviceService)
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3001/api";
 
-// Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -12,7 +11,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor untuk menambahkan token
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -26,7 +25,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor untuk handle error
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -38,7 +37,7 @@ api.interceptors.response.use(
   }
 );
 
-// API Services
+// Existing services...
 export const doctorService = {
   getAll: () => api.get("/doctors"),
   getById: (id) => api.get(`/doctors/${id}`),
@@ -75,6 +74,23 @@ export const uploadService = {
 
 export const dashboardService = {
   getStats: () => api.get("/dashboard/stats"),
+};
+
+// ⭐ HERO IMAGE SERVICE (BARU)
+export const heroImageService = {
+  // Public endpoints (tidak perlu auth)
+  getAll: (activeOnly = false) =>
+    api.get("/hero-images", { params: { activeOnly } }),
+
+  getById: (id) => api.get(`/hero-images/${id}`),
+
+  toggleActive: (id) => api.patch(`/hero-images/${id}/toggle-active`),
+};
+
+// ⭐ SERVICE SERVICE (BARU DITAMBAHKAN)
+export const serviceService = {
+  getAll: () => api.get("/services"), // Mendapatkan semua layanan
+  getBySlug: (slug) => api.get(`/services/slug/${slug}`), // Mendapatkan detail layanan berdasarkan slug
 };
 
 export default api;

@@ -1,3 +1,4 @@
+// src/components/Navbar.jsx
 import React, { useState, useEffect } from "react";
 import {
   AppBar,
@@ -16,14 +17,16 @@ import {
   MenuItem,
   useMediaQuery,
   useTheme,
+  CircularProgress,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAuth } from "../context/AuthContext";
 import AppointmentModal from "./AppointmentModal";
-import LoginModal from "./LoginModal"; // KEMBALI DI-IMPORT
+import LoginModal from "./LoginModal";
 import logo from "../assets/logo.png";
+import { serviceService } from "../utils/api";
 
 const Navbar = () => {
   const theme = useTheme();
@@ -32,14 +35,49 @@ const Navbar = () => {
   // State
   const [mobileOpen, setMobileOpen] = useState(false);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false); // DIBALIKKAN
+  const [loginOpen, setLoginOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // State untuk layanan dari API
+  const [services, setServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
 
   // Dropdown state
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   const { isLoggedIn } = useAuth();
+
+  // Fetch layanan dari API
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setServicesLoading(true);
+        const response = await serviceService.getAll();
+
+        // Pastikan selalu array, meskipun response bentuknya macam-macam
+        let data = [];
+        if (response?.data) {
+          if (Array.isArray(response.data)) {
+            data = response.data;
+          } else if (Array.isArray(response.data.data)) {
+            data = response.data.data;
+          } else if (Array.isArray(response.data.services)) {
+            data = response.data.services;
+          }
+        }
+
+        setServices(data);
+      } catch (error) {
+        console.error("Gagal mengambil daftar layanan:", error);
+        setServices([]); // Tetap array kosong
+      } finally {
+        setServicesLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   // Scroll handler
   useEffect(() => {
@@ -50,7 +88,6 @@ const Navbar = () => {
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
-  // Pendaftaran → kalau belum login, buka LoginModal dulu
   const handleAppointment = () => {
     if (!isLoggedIn) {
       setLoginOpen(true);
@@ -59,17 +96,23 @@ const Navbar = () => {
     }
   };
 
-  // Dropdown handlers
   const openDropdown = (event, id) => {
     setAnchorEl(event.currentTarget);
     setActiveDropdown(id);
   };
+
   const closeDropdown = () => {
     setAnchorEl(null);
     setActiveDropdown(null);
   };
 
-  // Menu items (Beranda ditambah, Hubungi Kami & Login button dihapus)
+  // Daftar item layanan untuk dropdown (selalu array)
+  const layananItems = services.map((service) => ({
+    text: service.title || "Layanan Tanpa Nama",
+    path: `/services/${service.slug}`,
+  }));
+
+  // Menu utama
   const menuItems = [
     { text: "Beranda", path: "/" },
     { text: "Temukan Dokter", path: "/doctors" },
@@ -77,30 +120,21 @@ const Navbar = () => {
       text: "Perusahaan",
       id: "perusahaan",
       items: [
-        { text: "Tentang rumah sakit Sayang Ibu", path: "/about" },
-        { text: "Manajemen Kami", path: "/management" },
+        { text: "Tentang rumah sakit", path: "/about" },
+        { text: "Direksi", path: "/management" },
         { text: "Karir", path: "/careers" },
       ],
     },
     {
       text: "Layanan",
       id: "layanan",
-      items: [
-        { text: "Kebidanan dan Kandungan", path: "/services/obstetrics" },
-        { text: "Dokter Anak", path: "/services/pediatrics" },
-        { text: "Dokter Penyakit Dalam", path: "/services/internal-medicine" },
-        { text: "Dokter Bedah", path: "/services/surgery" },
-        { text: "Pelayanan Baby Spa", path: "/services/baby-spa" },
-        { text: "Pelayanan Gawat Darurat (IGD)", path: "/services/emergency" },
-        { text: "Pelayanan Rawat Inap", path: "/services/inpatient" },
-        { text: "Pelayanan Farmasi", path: "/services/pharmacy" },
-        { text: "Pelayanan Laboratorium", path: "/services/laboratory" },
-        { text: "Ambulance", path: "/services/ambulance" },
-      ],
+      items: layananItems,
+      loading: servicesLoading,
     },
+    { text: "Informasi", path: "/articles" },
   ];
 
-  // Mobile drawer (sama seperti sebelumnya)
+  // Drawer untuk mobile
   const drawer = (
     <Box
       sx={{
@@ -125,7 +159,7 @@ const Navbar = () => {
             <img
               src={logo}
               alt="Logo"
-              style={{ width: 50, height: 50, mr: 1.5 }}
+              style={{ width: 50, height: 50, marginRight: 12 }}
             />
             <Typography variant="h5" sx={{ color: "#4CAF50", fontWeight: 700 }}>
               Rumah Sakit Sayang Ibu
@@ -151,23 +185,37 @@ const Navbar = () => {
                       }}
                     />
                   </ListItem>
-                  {item.items.map((sub) => (
-                    <ListItem
-                      key={sub.text}
-                      component={Link}
-                      to={sub.path}
-                      onClick={handleDrawerToggle}
-                      sx={{ pl: 4, py: 1.2 }}
-                    >
+                  {item.items.length > 0 ? (
+                    item.items.map((sub) => (
+                      <ListItem
+                        key={sub.text}
+                        component={Link}
+                        to={sub.path}
+                        onClick={handleDrawerToggle}
+                        sx={{ pl: 4, py: 1.2 }}
+                      >
+                        <ListItemText
+                          primary={sub.text}
+                          primaryTypographyProps={{
+                            fontSize: "1rem",
+                            color: "#555",
+                          }}
+                        />
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem sx={{ pl: 4, py: 1.2 }}>
                       <ListItemText
-                        primary={sub.text}
+                        primary={
+                          servicesLoading ? "Memuat..." : "Belum ada layanan"
+                        }
                         primaryTypographyProps={{
-                          fontSize: "1rem",
-                          color: "#555",
+                          color: "#999",
+                          fontStyle: "italic",
                         }}
                       />
                     </ListItem>
-                  ))}
+                  )}
                 </>
               ) : (
                 <ListItem
@@ -211,9 +259,7 @@ const Navbar = () => {
     </Box>
   );
 
-  // Warna berdasarkan scroll
   const navbarBg = scrolled || isMobile ? "#FFFFFF" : "transparent";
-  const logoBg = scrolled || isMobile ? "transparent" : "#FFFFFF";
   const textColor = scrolled && !isMobile ? "#2E7D32" : "#FFFFFF";
   const iconColor = scrolled || isMobile ? "#333" : "#FFFFFF";
 
@@ -241,7 +287,7 @@ const Navbar = () => {
             sx={{
               display: "flex",
               alignItems: "center",
-              bgcolor: logoBg,
+              bgcolor: scrolled || isMobile ? "transparent" : "#FFFFFF",
               borderRadius: scrolled || isMobile ? 0 : 30,
               px: scrolled || isMobile ? 0 : 2.5,
               py: 1,
@@ -251,7 +297,7 @@ const Navbar = () => {
             <img
               src={logo}
               alt="Logo"
-              style={{ width: 42, height: 42, mr: 1.5 }}
+              style={{ width: 42, height: 42, marginRight: 12 }}
             />
             <Typography
               variant="h6"
@@ -260,8 +306,8 @@ const Navbar = () => {
               sx={{
                 color: "#4CAF50",
                 textDecoration: "none",
-                fontWeight: 700,
-                fontSize: { xs: "1.25rem", md: "1.6rem" },
+                fontWeight: 600,
+                fontSize: { xs: "1.2rem", md: "1.3rem" },
               }}
             >
               Rumah Sakit Sayang Ibu
@@ -291,16 +337,18 @@ const Navbar = () => {
                     }}
                   >
                     {item.text}
+                    {item.loading && (
+                      <CircularProgress
+                        size={16}
+                        sx={{ ml: 1, color: "#4CAF50" }}
+                      />
+                    )}
                   </Button>
 
                   <Popper
                     open={activeDropdown === item.id}
                     anchorEl={anchorEl}
                     placement="bottom-start"
-                    disablePortal
-                    modifiers={[
-                      { name: "offset", options: { offset: [0, 8] } },
-                    ]}
                     sx={{ zIndex: 1400 }}
                   >
                     {() => (
@@ -312,31 +360,43 @@ const Navbar = () => {
                             minWidth: 260,
                             borderRadius: 3,
                             overflow: "hidden",
-                            transform: "none !important",
                             boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
                           }}
                         >
-                          {item.items.map((sub) => (
-                            <MenuItem
-                              key={sub.text}
-                              component={Link}
-                              to={sub.path}
-                              onClick={closeDropdown}
-                              sx={{
-                                py: 1.8,
-                                px: 3,
-                                fontSize: "0.98rem",
-                                fontWeight: 500,
-                                "&:hover": {
-                                  bgcolor: "#E8F5E9",
-                                  color: "#2E7D32",
-                                  pl: 4,
-                                },
-                              }}
-                            >
-                              {sub.text}
+                          {item.items.length > 0 ? (
+                            item.items.map((sub) => (
+                              <MenuItem
+                                key={sub.text}
+                                component={Link}
+                                to={sub.path}
+                                onClick={closeDropdown}
+                                sx={{
+                                  py: 1.8,
+                                  px: 3,
+                                  fontSize: "0.98rem",
+                                  fontWeight: 500,
+                                  "&:hover": {
+                                    bgcolor: "#E8F5E9",
+                                    color: "#2E7D32",
+                                    pl: 4,
+                                  },
+                                }}
+                              >
+                                {sub.text}
+                              </MenuItem>
+                            ))
+                          ) : (
+                            <MenuItem disabled>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {servicesLoading
+                                  ? "Memuat layanan..."
+                                  : "Belum ada layanan tersedia"}
+                              </Typography>
                             </MenuItem>
-                          ))}
+                          )}
                         </Paper>
                       </ClickAwayListener>
                     )}
@@ -361,7 +421,6 @@ const Navbar = () => {
               )
             )}
 
-            {/* Hanya tombol Pendaftaran */}
             <Button
               onClick={handleAppointment}
               variant="contained"
@@ -381,7 +440,7 @@ const Navbar = () => {
             </Button>
           </Box>
 
-          {/* Mobile hamburger */}
+          {/* Mobile Menu Button */}
           <IconButton
             onClick={handleDrawerToggle}
             sx={{ display: { md: "none" }, color: iconColor }}
@@ -404,18 +463,17 @@ const Navbar = () => {
         {drawer}
       </Drawer>
 
-      {/* Modals – KEDUANYA TETAP ADA */}
+      {/* Modals */}
       <AppointmentModal
         open={appointmentOpen}
         onClose={() => setAppointmentOpen(false)}
       />
-
       <LoginModal
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
         onLoginSuccess={() => {
           setLoginOpen(false);
-          setAppointmentOpen(true); // Setelah login berhasil langsung buka pendaftaran
+          setAppointmentOpen(true);
         }}
       />
     </>

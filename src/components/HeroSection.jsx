@@ -6,68 +6,111 @@ import {
   Container,
   useTheme,
   useMediaQuery,
-  Grid,
-  Card,
-  CardContent,
   Stack,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import PhoneIcon from "@mui/icons-material/Phone";
+import axios from "axios";
 
-// Import gambar terpisah untuk desktop & mobile
-import hero1ds from "../assets/hero2-ds.jpg";
-import hero2ds from "../assets/hero2-ds.jpg";
-import hero3ds from "../assets/hero2-ds.jpg";
-import hero1mb from "../assets/hero1-mb.jpg";
-import hero2mb from "../assets/hero1-mb.jpg";
-import hero3mb from "../assets/hero1-mb.jpg";
-
-import promoBanner from "../assets/promo1.png";
 import AppointmentModal from "./AppointmentModal";
 import LoginModal from "./LoginModal";
 import { useAuth } from "../context/AuthContext";
 
 const HeroSection = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // < 900px = mobile
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { isLoggedIn } = useAuth();
 
   const [currentImage, setCurrentImage] = useState(0);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
 
-  // Pilih array gambar berdasarkan device
-  const desktopImages = [hero1ds, hero2ds, hero3ds];
-  const mobileImages = [hero1mb, hero2mb, hero3mb];
-  const images = isMobile ? mobileImages : desktopImages;
+  // State untuk hero images dari API
+  const [heroImages, setHeroImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Reset index saat ganti device (opsional, agar tidak "loncat" gambar)
+  // Fetch hero images dari API
+  useEffect(() => {
+    const fetchHeroImages = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          "http://localhost:3001/api/hero-images?activeOnly=true"
+        );
+
+        if (response.data.success && response.data.data.length > 0) {
+          setHeroImages(response.data.data);
+          setError(null);
+        } else {
+          // Fallback ke gambar default jika tidak ada data
+          setHeroImages([]);
+        }
+      } catch (err) {
+        console.error("Error fetching hero images:", err);
+        setError(err.message);
+        setHeroImages([]); // Fallback ke empty array
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHeroImages();
+  }, []);
+
+  // Reset index saat ganti device atau data berubah
   useEffect(() => {
     setCurrentImage(0);
-  }, [isMobile]);
+  }, [isMobile, heroImages.length]);
 
   // Carousel otomatis
   useEffect(() => {
+    if (heroImages.length === 0) return;
+
     const interval = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % images.length);
+      setCurrentImage((prev) => (prev + 1) % heroImages.length);
     }, 6000);
+
     return () => clearInterval(interval);
-  }, [images.length]); // dependensi pada panjang array
+  }, [heroImages.length]);
 
   const handleAppointmentClick = () => {
     if (!isLoggedIn) setLoginOpen(true);
     else setAppointmentOpen(true);
   };
 
-  const stats = [
-    { number: "15+", label: "Tahun Pengalaman" },
-    { number: "50.000+", label: "Kelahiran" },
-    { number: "98%", label: "Kepuasan Pasien" },
-    { number: "Standar", label: "Kemenkes" },
-  ];
+  // Get current image URL based on device
+  const getCurrentImageUrl = () => {
+    if (heroImages.length === 0) {
+      // Fallback image jika tidak ada data
+      return "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1920";
+    }
+
+    const currentHeroImage = heroImages[currentImage];
+    return isMobile ? currentHeroImage.mobileUrl : currentHeroImage.desktopUrl;
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          pt: { xs: 10, sm: 12, md: 14 },
+          minHeight: "90vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "background.default",
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -94,7 +137,7 @@ const HeroSection = () => {
               rgba(0, 0, 0, 0.15) 0%, 
               rgba(0, 0, 0, 0) 0%
             ),
-            url(${images[currentImage]})
+            url(${getCurrentImageUrl()})
           `,
           backgroundSize: "cover",
           backgroundPosition: isMobile ? "center center" : "center top",
@@ -104,177 +147,156 @@ const HeroSection = () => {
         }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={7} lg={7}>
-              <Box
+          <Box
+            sx={{
+              height: "100%",
+              minHeight: { xs: "80vh", md: "65vh" },
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              py: { xs: 2, md: 2 },
+              maxWidth: { xs: "100%", lg: 680 },
+            }}
+          >
+            {/* Badge atas */}
+            <Box sx={{ mt: { xs: -2, md: -6 } }}>
+              <Stack direction="row" flexWrap="wrap" gap={1.5}>
+                <Chip
+                  icon={<LocalHospitalIcon />}
+                  label="Standar Kemenkes"
+                  size="small"
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.95)",
+                    fontWeight: 600,
+                  }}
+                />
+                <Chip
+                  label="Rumah Sakit Terpercaya"
+                  size="small"
+                  sx={{
+                    bgcolor: "#FFD700",
+                    color: "#000",
+                    fontWeight: 600,
+                  }}
+                />
+              </Stack>
+            </Box>
+
+            {/* Spacer */}
+            <Box sx={{ mt: 60 }} />
+
+            {/* Teks + Tombol bawah */}
+            <Box>
+              <Typography
+                variant="body1"
                 sx={{
-                  height: "100%",
-                  minHeight: { xs: "80vh", md: "65vh" },
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  py: { xs: 2, md: 2 },
-                  maxWidth: { xs: "100%", lg: 680 },
-                  mx: "auto",
+                  color: "#EEE",
+                  fontWeight: 500,
+                  fontSize: { xs: "1.05rem", md: "1.25rem", lg: "1.35rem" },
+                  lineHeight: 1.7,
+                  mb: 2,
+                  maxWidth: 640,
                 }}
               >
-                {/* Badge atas */}
-                <Box sx={{ mt: { xs: -2, md: -6 } }}>
-                  <Stack direction="row" flexWrap="wrap" gap={1.5}>
-                    <Chip
-                      icon={<LocalHospitalIcon />}
-                      label="Standar Kemenkes"
-                      size="small"
-                      sx={{
-                        bgcolor: "rgba(255,255,255,0.95)",
-                        fontWeight: 600,
-                      }}
-                    />
-                    <Chip
-                      label="Rumah Sakit Terpercaya"
-                      size="small"
-                      sx={{
-                        bgcolor: "#FFD700",
-                        color: "#000",
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Stack>
-                </Box>
+                Ikuti informasi tentang rumah sakit kami, atau informasi lebih
+                lanjut dapat menghubungi kami disini!
+              </Typography>
 
-                {/* Banner Promo */}
-                {/* <Box
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<CalendarMonthIcon />}
+                  onClick={handleAppointmentClick}
                   sx={{
-                    width: "100%",
-                    maxWidth: { xs: 280, sm: 550, md: 300, lg: 360 },
-                    mx: "left",
-                    my: { xs: 2, md: 2 },
+                    bgcolor: "#FFD700",
+                    color: "#000",
+                    fontWeight: 700,
+                    fontSize: "1.1rem",
+                    py: 2,
+                    px: 5,
                     borderRadius: 3,
-                    overflow: "hidden",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
-                    transition: "all 0.4s ease",
-                    "&:hover": { transform: "scale(1.03)" },
+                    boxShadow: "0 8px 30px rgba(255,215,0,0.4)",
+                    "&:hover": {
+                      bgcolor: "#FFC107",
+                      transform: "translateY(-4px)",
+                    },
                   }}
                 >
-                  <img
-                    src={promoBanner}
-                    alt="Promo RSIA Sayang Ibu 2025"
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      display: "block",
-                    }}
-                  />
-                </Box> */}
-                <Box>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: "#EEE",
-                      fontWeight: 500,
-                      fontSize: { xs: "1.05rem", md: "1.25rem", lg: "1.35rem" },
-                      lineHeight: 1.7,
-                      mb: 2,
-                      mt: 60,
-                      maxWidth: 640,
-                    }}
-                  ></Typography>
-                </Box>
+                  Pendaftaran Online
+                </Button>
 
-                {/* Teks + Tombol bawah */}
-                <Box>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: "#EEE",
-                      fontWeight: 500,
-                      fontSize: { xs: "1.05rem", md: "1.25rem", lg: "1.35rem" },
-                      lineHeight: 1.7,
-                      mb: 2,
-                      maxWidth: 640,
-                    }}
-                  >
-                    Ikuti informasi tentang rumah sakit kami, atau informasi
-                    lebih lanjut dapat menghubungi kami disini!.
-                  </Typography>
-
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                    <Button
-                      variant="contained"
-                      size="large"
-                      startIcon={<CalendarMonthIcon />}
-                      onClick={handleAppointmentClick}
-                      sx={{
-                        bgcolor: "#FFD700",
-                        color: "#000",
-                        fontWeight: 700,
-                        fontSize: "1.1rem",
-                        py: 2,
-                        px: 5,
-                        borderRadius: 3,
-                        boxShadow: "0 8px 30px rgba(255,215,0,0.4)",
-                        "&:hover": {
-                          bgcolor: "#FFC107",
-                          transform: "translateY(-4px)",
-                        },
-                      }}
-                    >
-                      Pendaftaran Online
-                    </Button>
-
-                    <Button
-                      variant="outlined"
-                      size="large"
-                      startIcon={<PhoneIcon />}
-                      href="tel:075271234"
-                      sx={{
-                        borderColor: "#FFF",
-                        color: "#FFF",
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        py: 2,
-                        px: 5,
-                        borderRadius: 3,
-                        borderWidth: 2,
-                        "&:hover": { bgcolor: "rgba(255,255,255,0.15)" },
-                      }}
-                    >
-                      Hubungi Kami
-                    </Button>
-                  </Stack>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={<PhoneIcon />}
+                  href="tel:075271234"
+                  sx={{
+                    borderColor: "#FFF",
+                    color: "#FFF",
+                    fontWeight: 600,
+                    fontSize: "1.1rem",
+                    py: 2,
+                    px: 5,
+                    borderRadius: 3,
+                    borderWidth: 2,
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.15)" },
+                  }}
+                >
+                  Hubungi Kami
+                </Button>
+              </Stack>
+            </Box>
+          </Box>
         </Container>
 
-        {/* Carousel Dots */}
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: 24,
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            gap: 1.5,
-          }}
-        >
-          {images.map((_, i) => (
-            <Box
-              key={i}
-              onClick={() => setCurrentImage(i)}
-              sx={{
-                width: currentImage === i ? 28 : 9,
-                height: 9,
-                borderRadius: "50%",
-                bgcolor:
-                  currentImage === i ? "#FFD700" : "rgba(255,255,255,0.5)",
-                cursor: "pointer",
-                transition: "all 0.3s",
-              }}
-            />
-          ))}
-        </Box>
+        {/* Carousel Dots - hanya tampil jika ada lebih dari 1 gambar */}
+        {heroImages.length > 1 && (
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 24,
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              gap: 1.5,
+            }}
+          >
+            {heroImages.map((_, i) => (
+              <Box
+                key={i}
+                onClick={() => setCurrentImage(i)}
+                sx={{
+                  width: currentImage === i ? 28 : 9,
+                  height: 9,
+                  borderRadius: "50%",
+                  bgcolor:
+                    currentImage === i ? "#FFD700" : "rgba(255,255,255,0.5)",
+                  cursor: "pointer",
+                  transition: "all 0.3s",
+                }}
+              />
+            ))}
+          </Box>
+        )}
+
+        {/* Error message (optional, untuk debugging) */}
+        {error && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 100,
+              right: 20,
+              bgcolor: "error.main",
+              color: "white",
+              p: 2,
+              borderRadius: 2,
+              fontSize: "0.875rem",
+            }}
+          >
+            Error loading images: {error}
+          </Box>
+        )}
       </Box>
 
       {/* Modals */}

@@ -1,4 +1,5 @@
-import React from "react";
+// src/components/ServiceDetailPage.jsx
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Box,
@@ -7,6 +8,7 @@ import {
   Grid,
   Card,
   CardContent,
+  CardMedia,
   Button,
   Paper,
   List,
@@ -14,261 +16,117 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  CircularProgress,
+  Chip,
+  Alert,
+  AlertTitle,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PhoneIcon from "@mui/icons-material/Phone";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import InfoIcon from "@mui/icons-material/Info";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import StarIcon from "@mui/icons-material/Star";
+import PeopleIcon from "@mui/icons-material/People";
+import SecurityIcon from "@mui/icons-material/Security";
 import logo from "../assets/logo.png";
-import hero1 from "../assets/hero1.jpg";
+import { serviceService } from "../utils/api";
 
 const ServiceDetailPage = () => {
   const { slug } = useParams();
+  const [service, setService] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const servicesData = {
-    obstetrics: {
-      title: "Kebidanan dan Kandungan",
-      description:
-        "Layanan komprehensif untuk kesehatan reproduksi wanita, kehamilan, dan persalinan",
-      heroImage: hero1,
-      features: [
-        "Konsultasi Kehamilan",
-        "USG 2D, 3D, dan 4D",
-        "Persalinan Normal",
-        "Operasi Caesar",
-        "Perawatan Kehamilan Risiko Tinggi",
-        "Program Kehamilan",
-        "Kontrasepsi dan KB",
-        "Pemeriksaan Kesehatan Reproduksi",
-      ],
-      facilities: [
-        "Ruang Bersalin Modern",
-        "Ruang Operasi Steril",
-        "Ruang Pemulihan Nyaman",
-        "Alat USG Canggih",
-        "Monitor Janin",
-        "Inkubator Bayi",
-      ],
-      schedule: "Senin - Sabtu: 08.00 - 20.00 WIB, Minggu: 08.00 - 14.00 WIB",
-      emergency: "Layanan IGD 24 Jam",
-    },
-    pediatrics: {
-      title: "Dokter Anak",
-      description:
-        "Pelayanan kesehatan anak dari bayi baru lahir hingga remaja",
-      heroImage: hero1,
-      features: [
-        "Pemeriksaan Tumbuh Kembang",
-        "Imunisasi Lengkap",
-        "Konsultasi Gizi Anak",
-        "Penanganan Penyakit Anak",
-        "Pemeriksaan Bayi Baru Lahir",
-        "Perawatan Bayi Prematur",
-        "Terapi Nebulizer",
-        "Konsultasi Laktasi",
-      ],
-      facilities: [
-        "Ruang Pemeriksaan Ramah Anak",
-        "Ruang Imunisasi",
-        "NICU (Neonatal Intensive Care Unit)",
-        "Baby Incubator",
-        "Phototherapy Unit",
-        "Ruang Observasi Anak",
-      ],
-      schedule: "Senin - Sabtu: 08.00 - 20.00 WIB, Minggu: 08.00 - 14.00 WIB",
-      emergency: "Layanan IGD Anak 24 Jam",
-    },
-    "internal-medicine": {
-      title: "Dokter Penyakit Dalam",
-      description: "Diagnosis dan pengobatan penyakit dalam untuk dewasa",
-      heroImage: hero1,
-      features: [
-        "Pemeriksaan Kesehatan Umum",
-        "Penanganan Diabetes",
-        "Hipertensi",
-        "Penyakit Jantung",
-        "Gangguan Pencernaan",
-        "Gangguan Ginjal",
-        "Penyakit Paru",
-        "Medical Check Up",
-      ],
-      facilities: [
-        "Ruang Pemeriksaan Lengkap",
-        "EKG (Elektrokardiogram)",
-        "Spirometri",
-        "Lab Klinik",
-        "Ruang Observasi",
-      ],
-      schedule: "Senin - Jumat: 08.00 - 16.00 WIB, Sabtu: 08.00 - 12.00 WIB",
-      emergency: "Konsultasi Emergency via IGD 24 Jam",
-    },
-    surgery: {
-      title: "Dokter Bedah",
-      description: "Layanan bedah umum dan operasi minor",
-      heroImage: hero1,
-      features: [
-        "Operasi Caesar",
-        "Operasi Hernia",
-        "Operasi Tumor Jinak",
-        "Operasi Minor",
-        "Operasi Kista",
-        "Circumcision (Sunat)",
-        "Konsultasi Pra dan Pasca Operasi",
-      ],
-      facilities: [
-        "Ruang Operasi Modern",
-        "Peralatan Bedah Steril",
-        "Ruang Pemulihan",
-        "ICU",
-        "Ruang Rawat Inap VIP",
-      ],
-      schedule: "Senin - Jumat: 09.00 - 15.00 WIB, By Appointment",
-      emergency: "Operasi Darurat via IGD 24 Jam",
-    },
-    "baby-spa": {
-      title: "Pelayanan Baby Spa",
-      description: "Perawatan dan terapi relaksasi untuk bayi",
-      heroImage: hero1,
-      features: [
-        "Baby Massage",
-        "Baby Swim",
-        "Baby Gym",
-        "Stimulasi Bayi",
-        "Hydrotherapy",
-        "Aromatherapy untuk Bayi",
-      ],
-      facilities: [
-        "Ruang Baby Spa Higienis",
-        "Kolam Baby Spa",
-        "Peralatan Terapi Bayi",
-        "Ruang Tunggu Nyaman",
-      ],
-      schedule: "Senin - Minggu: 09.00 - 17.00 WIB, By Appointment",
-      emergency: "Reservasi: (0752) 71234",
-    },
-    emergency: {
-      title: "Pelayanan Gawat Darurat (IGD)",
-      description:
-        "Layanan darurat 24 jam untuk kondisi kegawatdaruratan ibu dan anak",
-      heroImage: hero1,
-      features: [
-        "Penanganan Kegawatdaruratan Obstetri",
-        "Kegawatdaruratan Anak",
-        "Stabilisasi Pasien",
-        "Rujukan Terkoordinasi",
-        "Ambulance Siaga",
-        "Tim Medis On Call 24 Jam",
-      ],
-      facilities: [
-        "Ruang IGD Lengkap",
-        "Ambulance Modern",
-        "Peralatan Life Support",
-        "Obat-obatan Emergency",
-        "Ruang Observasi",
-      ],
-      schedule: "Buka 24 Jam Setiap Hari",
-      emergency: "Hotline IGD: +62 123 456 7890",
-    },
-    inpatient: {
-      title: "Pelayanan Rawat Inap",
-      description: "Ruang rawat inap nyaman dengan berbagai kelas",
-      heroImage: hero1,
-      features: [
-        "Ruang VIP",
-        "Ruang Kelas I",
-        "Ruang Kelas II",
-        "Ruang Kelas III",
-        "Suite Room",
-        "Ruang Nifas",
-        "Ruang Perinatologi",
-      ],
-      facilities: [
-        "AC dan TV",
-        "Kamar Mandi Dalam",
-        "Tempat Tidur Pasien Elektrik",
-        "Nurse Call System",
-        "WiFi Gratis",
-        "Dapur Mini (VIP)",
-        "Sofa Bed Penunggu",
-      ],
-      schedule: "Kunjungan: 11.00 - 13.00 & 17.00 - 20.00 WIB",
-      emergency: "Informasi Rawat Inap: (0752) 71234",
-    },
-    pharmacy: {
-      title: "Pelayanan Farmasi",
-      description: "Apotek dengan obat lengkap dan konsultasi farmasi",
-      heroImage: hero1,
-      features: [
-        "Obat Resep",
-        "Obat Bebas",
-        "Obat Generik",
-        "Obat Branded",
-        "Vitamin dan Suplemen",
-        "Alat Kesehatan",
-        "Konsultasi Farmasi",
-        "Home Delivery (area tertentu)",
-      ],
-      facilities: [
-        "Apotek Modern",
-        "Cold Chain Storage",
-        "Sistem Informasi Farmasi",
-        "Ruang Konsultasi",
-      ],
-      schedule: "Senin - Minggu: 07.00 - 21.00 WIB",
-      emergency: "Apotek IGD Buka 24 Jam",
-    },
-    laboratory: {
-      title: "Pelayanan Laboratorium",
-      description: "Pemeriksaan laboratorium lengkap dan akurat",
-      heroImage: hero1,
-      features: [
-        "Hematologi",
-        "Kimia Klinik",
-        "Imunologi",
-        "Mikrobiologi",
-        "Urinalisis",
-        "Pemeriksaan Kehamilan",
-        "Screening Penyakit",
-        "Medical Check Up Paket",
-      ],
-      facilities: [
-        "Laboratorium Terakreditasi",
-        "Alat Modern",
-        "Phlebotomy Room",
-        "Quality Control Ketat",
-      ],
-      schedule: "Senin - Sabtu: 07.00 - 20.00 WIB, Minggu: 07.00 - 12.00 WIB",
-      emergency: "Lab IGD Buka 24 Jam",
-    },
-    ambulance: {
-      title: "Ambulance",
-      description: "Layanan ambulance siaga 24 jam",
-      heroImage: hero1,
-      features: [
-        "Ambulance Modern",
-        "Peralatan Life Support",
-        "Tenaga Medis Terlatih",
-        "Oksigen",
-        "Alat Resusitasi",
-        "Monitor Vital Sign",
-        "Layanan Antar Jemput Pasien",
-      ],
-      facilities: [
-        "Ambulance Type A",
-        "Ambulance Type B",
-        "GPS Tracking",
-        "Komunikasi Radio",
-      ],
-      schedule: "Siaga 24 Jam Setiap Hari",
-      emergency: "Call Center Ambulance: +62 123 456 7890",
-    },
+  // Helper function untuk parse JSON string
+  const parseJsonField = (field) => {
+    if (!field) return [];
+    if (Array.isArray(field)) return field;
+    try {
+      return JSON.parse(field);
+    } catch (e) {
+      console.error("Error parsing JSON:", e);
+      return [];
+    }
   };
 
-  const service = servicesData[slug] || servicesData["obstetrics"];
+  // Fetch data service dari API berdasarkan slug
+  useEffect(() => {
+    const fetchService = async () => {
+      try {
+        setLoading(true);
+        const response = await serviceService.getBySlug(slug);
+
+        let serviceData = null;
+        if (response?.data?.data) {
+          serviceData = response.data.data;
+        } else if (response?.data) {
+          serviceData = response.data;
+        }
+
+        if (serviceData) {
+          const parsedService = {
+            ...serviceData,
+            features: parseJsonField(serviceData.features),
+            facilities: parseJsonField(serviceData.facilities),
+          };
+          setService(parsedService);
+          setError(null);
+        } else {
+          setError("Layanan tidak ditemukan");
+        }
+      } catch (err) {
+        console.error("Error fetching service:", err);
+        setError("Belum tersedia informasi");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchService();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          pt: 10,
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (error || !service) {
+    return (
+      <Container sx={{ mt: 15, mb: 10, textAlign: "center" }}>
+        <Typography variant="h5" color="error" gutterBottom>
+          {error || "Layanan tidak ditemukan"}
+        </Typography>
+        <Button component={Link} to="/" variant="contained" sx={{ mt: 3 }}>
+          Kembali ke Beranda
+        </Button>
+      </Container>
+    );
+  }
 
   return (
-    <Box sx={{ backgroundColor: "#FAFAFA", minHeight: "100vh" }}>
+    <Box sx={{ backgroundColor: "#F8F9FA", minHeight: "100vh" }}>
       <Helmet>
         <title>{service.title} - RSIA Sayang Ibu Batusangkar</title>
         <meta name="description" content={service.description} />
@@ -278,113 +136,451 @@ const ServiceDetailPage = () => {
         />
       </Helmet>
 
-      {/* Hero Section */}
+      {/* Hero Section - Banner Hijau */}
       <Box
         sx={{
+          background:
+            "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%)",
+          py: { xs: 8, md: 10 },
           position: "relative",
-          height: { xs: "50vh", md: "60vh" },
-          backgroundImage: `linear-gradient(135deg, rgba(76, 175, 80, 0.9) 0%, rgba(27, 94, 32, 0.8) 100%), url(${service.heroImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          color: "#FFFFFF",
+          overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background:
+              "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)",
+          },
         }}
       >
-        <Container maxWidth="lg">
-          <Box sx={{ mb: 3 }}>
+        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "column",
+              textAlign: "center",
+            }}
+          >
             <Box
               component="img"
               src={logo}
               alt="RSIA Sayang Ibu Logo"
               sx={{
-                width: { xs: 60, md: 100 },
-                height: { xs: 60, md: 100 },
-                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
+                width: { xs: 80, md: 110 },
+                height: { xs: 80, md: 110 },
+                backgroundColor: "rgba(255,255,255,0.98)",
+                borderRadius: "50%",
+                p: 1.5,
+                mb: 3,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
               }}
             />
+            <Chip
+              label="Layanan Unggulan"
+              icon={<StarIcon />}
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.2)",
+                color: "#FFF",
+                fontWeight: 600,
+                mb: 2,
+                backdropFilter: "blur(10px)",
+              }}
+            />
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: "2rem", md: "3.5rem" },
+                color: "#FFFFFF",
+                textShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                mb: 2,
+              }}
+            >
+              {service.title}
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                flexWrap: "wrap",
+                justifyContent: "center",
+              }}
+            >
+              <Chip
+                icon={<VerifiedUserIcon />}
+                label="Tersertifikasi"
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  fontWeight: 600,
+                }}
+              />
+              <Chip
+                icon={<PeopleIcon />}
+                label="Tim Profesional"
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  fontWeight: 600,
+                }}
+              />
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Deskripsi Utama */}
+      <Container maxWidth="lg" sx={{ mt: -4, position: "relative", zIndex: 2 }}>
+        <Paper
+          elevation={4}
+          sx={{
+            p: { xs: 3, md: 5 },
+            mt: 10,
+            borderRadius: 3,
+            backgroundColor: "#FFFFFF",
+            mb: 5,
+            border: "1px solid #E8F5E9",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+            <MedicalServicesIcon
+              sx={{ color: "#4CAF50", fontSize: 32, mr: 2 }}
+            />
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#2E7D32" }}>
+              Tentang Layanan
+            </Typography>
           </Box>
           <Typography
-            variant="h2"
+            variant="body1"
             sx={{
-              fontWeight: 700,
-              fontSize: { xs: "2rem", md: "3.5rem" },
-              mb: 2,
-              textShadow: "0 4px 12px rgba(0,0,0,0.5)",
-            }}
-          >
-            {service.title}
-          </Typography>
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 300,
-              fontSize: { xs: "1.1rem", md: "1.4rem" },
-              maxWidth: 700,
-              mx: "auto",
-              textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+              fontSize: { xs: "1rem", md: "1.1rem" },
+              lineHeight: 1.9,
+              color: "#424242",
+              textAlign: "justify",
+              letterSpacing: "0.3px",
             }}
           >
             {service.description}
           </Typography>
-        </Container>
-      </Box>
+        </Paper>
+      </Container>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
+      <Container maxWidth="lg" sx={{ pb: 8 }}>
         <Grid container spacing={4}>
           {/* Main Content */}
           <Grid item xs={12} md={8}>
-            {/* Features */}
+            {/* Gambar Layanan */}
+            {service.imageUrl && (
+              <Paper
+                elevation={3}
+                sx={{
+                  mb: 4,
+                  borderRadius: 3,
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  image={service.imageUrl}
+                  alt={service.title}
+                  sx={{
+                    width: "100%",
+                    height: "auto",
+                    maxHeight: 450,
+                    objectFit: "cover",
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
+                    color: "#FFF",
+                    p: 2,
+                  }}
+                >
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    Fasilitas {service.title} - Rumah Sakit Sayang Ibu
+                  </Typography>
+                </Box>
+              </Paper>
+            )}
+
+            {/* Keunggulan Layanan */}
             <Paper
-              elevation={0}
+              elevation={2}
               sx={{
                 mb: 4,
                 p: { xs: 3, md: 4 },
                 borderRadius: 3,
                 backgroundColor: "#FFFFFF",
-                border: "1px solid #E0E0E0",
+                border: "2px solid #E8F5E9",
               }}
             >
-              <Typography
-                variant="h4"
-                sx={{
-                  color: "#2E7D32",
-                  fontWeight: 700,
-                  mb: 3,
-                  fontSize: { xs: "1.5rem", md: "2rem" },
-                }}
-              >
-                Layanan yang Tersedia
-              </Typography>
-              <List>
-                {service.features.map((feature, index) => (
-                  <ListItem key={index} sx={{ px: 0 }}>
-                    <ListItemIcon>
-                      <CheckCircleIcon sx={{ color: "#4CAF50" }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={feature}
-                      primaryTypographyProps={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Box
+                  sx={{
+                    backgroundColor: "#E8F5E9",
+                    borderRadius: 2,
+                    p: 1.5,
+                    mr: 2,
+                  }}
+                >
+                  <CheckCircleIcon sx={{ color: "#4CAF50", fontSize: 32 }} />
+                </Box>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    color: "#2E7D32",
+                    fontWeight: 700,
+                    fontSize: { xs: "1.5rem", md: "2rem" },
+                  }}
+                >
+                  Keunggulan Layanan Kami
+                </Typography>
+              </Box>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Card
+                    sx={{
+                      backgroundColor: "#F1F8E9",
+                      boxShadow: "none",
+                      p: 2,
+                      height: "100%",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                      <StarIcon sx={{ color: "#FBC02D", mr: 1 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 600, color: "#2E7D32" }}
+                      >
+                        Standar Pelayanan Tinggi
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Layanan berkualitas dengan standar nasional
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Card
+                    sx={{
+                      backgroundColor: "#F1F8E9",
+                      boxShadow: "none",
+                      p: 2,
+                      height: "100%",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                      <PeopleIcon sx={{ color: "#4CAF50", mr: 1 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 600, color: "#2E7D32" }}
+                      >
+                        Tim Medis Berpengalaman
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Ditangani oleh tenaga medis profesional
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Card
+                    sx={{
+                      backgroundColor: "#F1F8E9",
+                      boxShadow: "none",
+                      p: 2,
+                      height: "100%",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                      <SecurityIcon sx={{ color: "#4CAF50", mr: 1 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 600, color: "#2E7D32" }}
+                      >
+                        Keamanan Terjamin
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Prosedur medis yang aman dan teruji
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Card
+                    sx={{
+                      backgroundColor: "#F1F8E9",
+                      boxShadow: "none",
+                      p: 2,
+                      height: "100%",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                      <AccessTimeIcon sx={{ color: "#4CAF50", mr: 1 }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 600, color: "#2E7D32" }}
+                      >
+                        Layanan Cepat
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Penanganan yang efisien dan tepat waktu
+                    </Typography>
+                  </Card>
+                </Grid>
+              </Grid>
             </Paper>
 
+            {/* Features */}
+            {service.features && service.features.length > 0 && (
+              <Paper
+                elevation={2}
+                sx={{
+                  mb: 4,
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 3,
+                  backgroundColor: "#FFFFFF",
+                }}
+              >
+                <Typography
+                  variant="h4"
+                  sx={{
+                    color: "#2E7D32",
+                    fontWeight: 700,
+                    mb: 3,
+                    fontSize: { xs: "1.5rem", md: "2rem" },
+                  }}
+                >
+                  Jenis Layanan yang Tersedia
+                </Typography>
+                <List>
+                  {service.features.map((feature, index) => (
+                    <ListItem
+                      key={index}
+                      sx={{
+                        px: 0,
+                        py: 1.5,
+                        borderBottom:
+                          index < service.features.length - 1
+                            ? "1px solid #F0F0F0"
+                            : "none",
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Box
+                          sx={{
+                            backgroundColor: "#E8F5E9",
+                            borderRadius: "50%",
+                            width: 40,
+                            height: 40,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <CheckCircleIcon
+                            sx={{ color: "#4CAF50", fontSize: 24 }}
+                          />
+                        </Box>
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={feature}
+                        primaryTypographyProps={{
+                          fontSize: "1.1rem",
+                          fontWeight: 500,
+                          color: "#333",
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            )}
+
             {/* Facilities */}
+            {service.facilities && service.facilities.length > 0 && (
+              <Paper
+                elevation={2}
+                sx={{
+                  mb: 4,
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 3,
+                  backgroundColor: "#FFFFFF",
+                }}
+              >
+                <Typography
+                  variant="h4"
+                  sx={{
+                    color: "#2E7D32",
+                    fontWeight: 700,
+                    mb: 3,
+                    fontSize: { xs: "1.5rem", md: "2rem" },
+                  }}
+                >
+                  Fasilitas Penunjang
+                </Typography>
+                <Grid container spacing={2}>
+                  {service.facilities.map((facility, index) => (
+                    <Grid item xs={12} sm={6} key={index}>
+                      <Card
+                        sx={{
+                          backgroundColor: "#FAFAFA",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          borderRadius: 2,
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            transform: "translateY(-4px)",
+                            boxShadow: "0 4px 16px rgba(76, 175, 80, 0.2)",
+                          },
+                        }}
+                      >
+                        <CardContent sx={{ p: 2.5 }}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Box
+                              sx={{
+                                backgroundColor: "#E8F5E9",
+                                borderRadius: 2,
+                                p: 1,
+                                mr: 2,
+                              }}
+                            >
+                              <LocalHospitalIcon
+                                sx={{ color: "#4CAF50", fontSize: 28 }}
+                              />
+                            </Box>
+                            <Typography
+                              variant="body1"
+                              sx={{ color: "#2E7D32", fontWeight: 600 }}
+                            >
+                              {facility}
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Paper>
+            )}
+
+            {/* FAQ Section */}
             <Paper
-              elevation={0}
+              elevation={2}
               sx={{
                 mb: 4,
                 p: { xs: 3, md: 4 },
                 borderRadius: 3,
                 backgroundColor: "#FFFFFF",
-                border: "1px solid #E0E0E0",
               }}
             >
               <Typography
@@ -396,38 +592,62 @@ const ServiceDetailPage = () => {
                   fontSize: { xs: "1.5rem", md: "2rem" },
                 }}
               >
-                Fasilitas
+                Pertanyaan Umum
               </Typography>
-              <Grid container spacing={2}>
-                {service.facilities.map((facility, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Card
-                      sx={{
-                        backgroundColor: "#E8F5E9",
-                        boxShadow: "none",
-                        borderRadius: 2,
-                      }}
-                    >
-                      <CardContent sx={{ p: 2 }}>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <LocalHospitalIcon
-                            sx={{ color: "#4CAF50", mr: 1.5, fontSize: 24 }}
-                          />
-                          <Typography variant="body1" sx={{ color: "#2E7D32" }}>
-                            {facility}
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+              <Accordion
+                sx={{ mb: 1, boxShadow: "none", border: "1px solid #E0E0E0" }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: 600 }}>
+                    Apakah layanan ini menerima BPJS?
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography color="text.secondary">
+                    Ya, kami menerima BPJS Kesehatan dan berbagai asuransi
+                    kesehatan lainnya. Silakan hubungi bagian administrasi untuk
+                    informasi lebih lanjut.
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion
+                sx={{ mb: 1, boxShadow: "none", border: "1px solid #E0E0E0" }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: 600 }}>
+                    Bagaimana cara membuat janji?
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography color="text.secondary">
+                    Anda dapat membuat janji melalui telepon, WhatsApp, atau
+                    datang langsung ke bagian pendaftaran. Kami sarankan untuk
+                    membuat janji terlebih dahulu agar tidak perlu menunggu
+                    lama.
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion
+                sx={{ boxShadow: "none", border: "1px solid #E0E0E0" }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: 600 }}>
+                    Apa yang harus dibawa saat berkunjung?
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography color="text.secondary">
+                    Bawa kartu identitas (KTP/SIM), kartu BPJS/asuransi (jika
+                    ada), dan rekam medis sebelumnya jika ada. Datang 15 menit
+                    lebih awal untuk proses administrasi.
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
             </Paper>
           </Grid>
 
-          {/* Sidebar */}
           <Grid item xs={12} md={4}>
-            {/* Schedule Card */}
+            {/* Payment & Insurance */}
             <Card
               sx={{
                 mb: 3,
@@ -437,78 +657,61 @@ const ServiceDetailPage = () => {
             >
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <AccessTimeIcon
-                    sx={{ color: "#4CAF50", mr: 1, fontSize: 28 }}
-                  />
+                  <Box
+                    sx={{
+                      backgroundColor: "#E8F5E9",
+                      borderRadius: 2,
+                      p: 1,
+                      mr: 2,
+                    }}
+                  >
+                    <AttachMoneyIcon sx={{ color: "#4CAF50", fontSize: 28 }} />
+                  </Box>
                   <Typography
                     variant="h6"
                     sx={{ color: "#2E7D32", fontWeight: 700 }}
                   >
-                    Jadwal Layanan
+                    Metode Pembayaran
                   </Typography>
                 </Box>
                 <Divider sx={{ mb: 2 }} />
-                <Typography variant="body1" sx={{ color: "#333", mb: 2 }}>
-                  {service.schedule}
-                </Typography>
-                <Box
-                  sx={{
-                    backgroundColor: "#FFF3E0",
-                    p: 2,
-                    borderRadius: 2,
-                    border: "1px solid #FFE0B2",
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#E65100", fontWeight: 600 }}
-                  >
-                    {service.emergency}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-
-            {/* Contact Card */}
-            <Card
-              sx={{
-                mb: 3,
-                borderRadius: 3,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-                background: "linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)",
-                color: "#FFF",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <PhoneIcon sx={{ color: "#FFF", mr: 1, fontSize: 28 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Hubungi Kami
-                  </Typography>
-                </Box>
-                <Divider sx={{ mb: 2, borderColor: "rgba(255,255,255,0.3)" }} />
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  Telepon: (0752) 71234
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  WhatsApp: +62 812-3456-7890
-                </Typography>
-                <Button
-                  variant="contained"
-                  component={Link}
-                  to="/contact"
-                  fullWidth
-                  sx={{
-                    backgroundColor: "#FFF",
-                    color: "#4CAF50",
-                    fontWeight: 600,
-                    "&:hover": {
-                      backgroundColor: "#F5F5F5",
-                    },
-                  }}
-                >
-                  Buat Janji Temu
-                </Button>
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <Chip
+                      label="BPJS"
+                      size="small"
+                      sx={{ width: "100%", backgroundColor: "#E8F5E9" }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Chip
+                      label="Tunai"
+                      size="small"
+                      sx={{ width: "100%", backgroundColor: "#E8F5E9" }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Chip
+                      label="Debit"
+                      size="small"
+                      sx={{ width: "100%", backgroundColor: "#E8F5E9" }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Chip
+                      label="Kredit"
+                      size="small"
+                      sx={{ width: "100%", backgroundColor: "#E8F5E9" }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Chip
+                      label="Asuransi Swasta"
+                      size="small"
+                      sx={{ width: "100%", backgroundColor: "#E8F5E9" }}
+                    />
+                  </Grid>
+                </Grid>
               </CardContent>
             </Card>
 
@@ -517,48 +720,108 @@ const ServiceDetailPage = () => {
               sx={{
                 borderRadius: 3,
                 boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                border: "2px solid #E8F5E9",
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Typography
-                  variant="h6"
-                  sx={{ color: "#2E7D32", fontWeight: 700, mb: 2 }}
-                >
-                  Informasi Penting
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                  <Box
+                    sx={{
+                      backgroundColor: "#E8F5E9",
+                      borderRadius: 2,
+                      p: 1,
+                      mr: 2,
+                    }}
+                  >
+                    <InfoIcon sx={{ color: "#4CAF50", fontSize: 28 }} />
+                  </Box>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: "#2E7D32", fontWeight: 700 }}
+                  >
+                    Persiapan Kunjungan
+                  </Typography>
+                </Box>
                 <Divider sx={{ mb: 2 }} />
                 <List sx={{ p: 0 }}>
-                  <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItem sx={{ px: 0, py: 1.5, alignItems: "flex-start" }}>
+                    <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
+                      <CheckCircleIcon
+                        sx={{ color: "#4CAF50", fontSize: 20 }}
+                      />
+                    </ListItemIcon>
                     <ListItemText
                       primary="Bawa Kartu Identitas"
-                      secondary="KTP/SIM/Passport"
+                      secondary="KTP/SIM/Passport yang masih berlaku"
                       primaryTypographyProps={{
                         fontWeight: 600,
                         fontSize: "0.95rem",
                       }}
+                      secondaryTypographyProps={{
+                        fontSize: "0.85rem",
+                      }}
                     />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItem sx={{ px: 0, py: 1.5, alignItems: "flex-start" }}>
+                    <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
+                      <CheckCircleIcon
+                        sx={{ color: "#4CAF50", fontSize: 20 }}
+                      />
+                    </ListItemIcon>
                     <ListItemText
                       primary="Kartu BPJS/Asuransi"
-                      secondary="Jika ada"
+                      secondary="Jika memiliki jaminan kesehatan"
                       primaryTypographyProps={{
                         fontWeight: 600,
                         fontSize: "0.95rem",
                       }}
+                      secondaryTypographyProps={{
+                        fontSize: "0.85rem",
+                      }}
                     />
                   </ListItem>
-                  <ListItem sx={{ px: 0, py: 1 }}>
+                  <ListItem sx={{ px: 0, py: 1.5, alignItems: "flex-start" }}>
+                    <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
+                      <CheckCircleIcon
+                        sx={{ color: "#4CAF50", fontSize: 20 }}
+                      />
+                    </ListItemIcon>
                     <ListItemText
-                      primary="Datang 15 Menit Lebih Awal"
-                      secondary="Untuk registrasi"
+                      primary="Datang Lebih Awal"
+                      secondary="15-30 menit sebelum jadwal untuk registrasi"
                       primaryTypographyProps={{
                         fontWeight: 600,
                         fontSize: "0.95rem",
+                      }}
+                      secondaryTypographyProps={{
+                        fontSize: "0.85rem",
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem sx={{ px: 0, py: 1.5, alignItems: "flex-start" }}>
+                    <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
+                      <CheckCircleIcon
+                        sx={{ color: "#4CAF50", fontSize: 20 }}
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Rekam Medis"
+                      secondary="Bawa hasil pemeriksaan sebelumnya jika ada"
+                      primaryTypographyProps={{
+                        fontWeight: 600,
+                        fontSize: "0.95rem",
+                      }}
+                      secondaryTypographyProps={{
+                        fontSize: "0.85rem",
                       }}
                     />
                   </ListItem>
                 </List>
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Harap konfirmasi jadwal janji temu Anda sebelum datang
+                  </Typography>
+                </Alert>
               </CardContent>
             </Card>
           </Grid>
@@ -566,79 +829,186 @@ const ServiceDetailPage = () => {
 
         {/* CTA Section */}
         <Paper
-          elevation={0}
+          elevation={4}
           sx={{
-            mt: 8,
+            mt: 6,
             p: { xs: 4, md: 6 },
             borderRadius: 4,
-            background: "linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)",
+            background:
+              "linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%)",
             textAlign: "center",
             color: "#FFF",
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: -50,
+              right: -50,
+              width: 200,
+              height: 200,
+              background:
+                "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
+              borderRadius: "50%",
+            },
           }}
         >
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              mb: 2,
-              fontSize: { xs: "1.5rem", md: "2rem" },
-            }}
-          >
-            Butuh Konsultasi Lebih Lanjut?
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
-            Tim medis kami siap membantu Anda. Hubungi kami atau buat janji temu
-            sekarang.
-          </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <Button
-              variant="contained"
-              component={Link}
-              to="/contact"
+          <Box sx={{ position: "relative", zIndex: 1 }}>
+            <Typography
+              variant="h4"
               sx={{
-                backgroundColor: "#FFF",
-                color: "#4CAF50",
-                borderRadius: 30,
-                px: 4,
-                py: 1.5,
-                fontWeight: 600,
-                fontSize: "1rem",
-                "&:hover": {
-                  backgroundColor: "#F5F5F5",
-                },
+                fontWeight: 700,
+                mb: 2,
+                fontSize: { xs: "1.5rem", md: "2.2rem" },
               }}
             >
-              Hubungi Kami
-            </Button>
-            <Button
-              variant="outlined"
-              component={Link}
-              to="/doctors"
+              Siap Mendapatkan Layanan Terbaik?
+            </Typography>
+            <Typography
+              variant="body1"
               sx={{
-                borderColor: "#FFF",
-                color: "#FFF",
-                borderRadius: 30,
-                px: 4,
-                py: 1.5,
-                fontWeight: 600,
-                fontSize: "1rem",
-                "&:hover": {
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  borderColor: "#FFF",
-                },
+                mb: 4,
+                opacity: 0.95,
+                maxWidth: 600,
+                mx: "auto",
+                fontSize: { xs: "0.95rem", md: "1.1rem" },
               }}
             >
-              Lihat Dokter
-            </Button>
+              Tim medis profesional kami siap memberikan pelayanan kesehatan
+              terbaik untuk Anda dan keluarga. Hubungi kami sekarang untuk
+              konsultasi atau membuat janji temu.
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <Button
+                variant="contained"
+                component={Link}
+                to="/contact"
+                size="large"
+                sx={{
+                  backgroundColor: "#FFF",
+                  color: "#4CAF50",
+                  borderRadius: 30,
+                  px: 5,
+                  py: 1.8,
+                  fontWeight: 700,
+                  fontSize: "1.05rem",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+                  "&:hover": {
+                    backgroundColor: "#F5F5F5",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+                  },
+                  transition: "all 0.3s ease",
+                }}
+              >
+                Hubungi Kami!
+              </Button>
+            </Box>
           </Box>
         </Paper>
+
+        {/* Trust Indicators */}
+        <Grid container spacing={3} sx={{ mt: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                textAlign: "center",
+                p: 3,
+                backgroundColor: "#FAFAFA",
+                boxShadow: "none",
+                border: "1px solid #E0E0E0",
+              }}
+            >
+              <VerifiedUserIcon
+                sx={{ fontSize: 48, color: "#4CAF50", mb: 1 }}
+              />
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: "#2E7D32" }}
+              >
+                Tersertifikasi
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Standar layanan nasional
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                textAlign: "center",
+                p: 3,
+                backgroundColor: "#FAFAFA",
+                boxShadow: "none",
+                border: "1px solid #E0E0E0",
+              }}
+            >
+              <PeopleIcon sx={{ fontSize: 48, color: "#4CAF50", mb: 1 }} />
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: "#2E7D32" }}
+              >
+                Tim Profesional
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Tenaga medis berpengalaman
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                textAlign: "center",
+                p: 3,
+                backgroundColor: "#FAFAFA",
+                boxShadow: "none",
+                border: "1px solid #E0E0E0",
+              }}
+            >
+              <AccessTimeIcon sx={{ fontSize: 48, color: "#4CAF50", mb: 1 }} />
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: "#2E7D32" }}
+              >
+                24/7 Emergency
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Layanan darurat siaga
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                textAlign: "center",
+                p: 3,
+                backgroundColor: "#FAFAFA",
+                boxShadow: "none",
+                border: "1px solid #E0E0E0",
+              }}
+            >
+              <LocalHospitalIcon
+                sx={{ fontSize: 48, color: "#4CAF50", mb: 1 }}
+              />
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: "#2E7D32" }}
+              >
+                Fasilitas Lengkap
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Peralatan medis modern
+              </Typography>
+            </Card>
+          </Grid>
+        </Grid>
       </Container>
     </Box>
   );

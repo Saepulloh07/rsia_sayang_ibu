@@ -12,12 +12,13 @@ import {
   CircularProgress,
   Alert,
   Avatar,
+  IconButton,
 } from "@mui/material";
 import { Helmet } from "react-helmet";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PersonIcon from "@mui/icons-material/Person";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import logo from "../assets/logo.png";
 import { articleService } from "../utils/api";
 
@@ -36,30 +37,29 @@ const ArticleDetailPage = () => {
     try {
       setLoading(true);
       const response = await articleService.getById(id);
-
       if (response.data.success) {
         setArticle(response.data.data);
         setError(null);
       }
     } catch (err) {
       console.error("Error fetching article:", err);
-      setError("Artikel tidak ditemukan.");
+      setError("Artikel tidak ditemukan atau sedang dalam perbaikan.");
     } finally {
       setLoading(false);
     }
   };
 
   const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "long",
+    return new Date(dateString).toLocaleDateString("id-ID", {
       day: "numeric",
+      month: "long",
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    };
-    return new Date(dateString).toLocaleDateString("id-ID", options);
+    });
   };
 
+  // Loading & Error States (tetap sama)
   if (loading) {
     return (
       <Box
@@ -68,32 +68,38 @@ const ArticleDetailPage = () => {
           justifyContent: "center",
           alignItems: "center",
           minHeight: "100vh",
-          backgroundColor: "#F8F9FA",
+          bgcolor: "#f5f5f5",
         }}
       >
-        <CircularProgress size={60} sx={{ color: "#4CAF50" }} />
+        <CircularProgress size={70} thickness={5} sx={{ color: "#4CAF50" }} />
       </Box>
     );
   }
 
   if (error || !article) {
     return (
-      <Box sx={{ backgroundColor: "#F8F9FA", minHeight: "100vh", py: 10 }}>
-        <Container maxWidth="md">
+      <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh", py: 12 }}>
+        <Container maxWidth="sm">
           <Alert
-            severity="error"
-            sx={{ mb: 3 }}
+            severity="warning"
+            sx={{
+              borderRadius: 3,
+              fontSize: "1.1rem",
+              py: 3,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            }}
             action={
               <Button
-                color="inherit"
-                size="small"
+                variant="outlined"
+                color="success"
                 onClick={() => navigate("/articles")}
+                sx={{ borderRadius: 20, px: 4 }}
               >
-                Kembali
+                Kembali ke Artikel
               </Button>
             }
           >
-            {error || "Artikel tidak ditemukan"}
+            {error}
           </Alert>
         </Container>
       </Box>
@@ -101,7 +107,7 @@ const ArticleDetailPage = () => {
   }
 
   return (
-    <Box sx={{ backgroundColor: "#F8F9FA", minHeight: "100vh" }}>
+    <>
       <Helmet>
         <title>{article.title} - RSIA Sayang Ibu Batusangkar</title>
         <meta
@@ -110,206 +116,263 @@ const ArticleDetailPage = () => {
         />
         <meta
           name="keywords"
-          content={`${article.category}, kesehatan, rsia sayang ibu`}
+          content={`${article.category}, kesehatan ibu dan anak, rsia sayang ibu, artikel kesehatan`}
         />
       </Helmet>
 
-      {/* Hero Section */}
+      {/* HERO SECTION – Hanya gambar + logo + tombol kembali */}
       <Box
         sx={{
           position: "relative",
-          height: { xs: "40vh", md: "50vh" },
-          backgroundImage: `linear-gradient(135deg, rgba(76, 175, 80, 0.85) 0%, rgba(27, 94, 32, 0.75) 100%), url(${
-            article.image || "https://via.placeholder.com/1200x600?text=Article"
+          height: { xs: "40vh", md: "55vh" },
+          minHeight: 420,
+          backgroundImage: `linear-gradient(135deg, rgba(34, 139, 34, 0.92) 0%, rgba(76, 175, 80, 0.85) 100%), url(${
+            article.image || "https://via.placeholder.com/1600x900"
           })`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          color: "#fff",
+          overflow: "hidden",
         }}
       >
-        <Container maxWidth="lg">
-          <Button
-            component={Link}
-            to="/articles"
-            startIcon={<ArrowBackIcon />}
-            sx={{
-              color: "#FFF",
-              mb: 3,
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.1)",
-              },
-            }}
-          >
-            Kembali ke Artikel
-          </Button>
-          <Box
-            component="img"
-            src={logo}
-            alt="RSIA Sayang Ibu Logo"
-            sx={{
-              width: { xs: 50, md: 70 },
-              height: { xs: 50, md: 70 },
-              mb: 2,
-              filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
-            }}
-          />
-          <Chip
-            label={article.category}
-            sx={{
-              backgroundColor: "rgba(255,255,255,0.9)",
-              color: "#4CAF50",
-              fontWeight: 600,
-              mb: 2,
-            }}
-          />
-        </Container>
-      </Box>
-
-      <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 } }}>
-        <Paper
-          elevation={0}
+        {/* Tombol Kembali */}
+        <IconButton
+          component={Link}
+          to="/articles"
           sx={{
-            p: { xs: 3, md: 5 },
-            borderRadius: 4,
-            backgroundColor: "#FFFFFF",
-            border: "1px solid #E0E0E0",
+            position: "absolute",
+            top: { xs: 16, md: 32 },
+            left: { xs: 16, md: 32 },
+            bgcolor: "rgba(255,255,255,0.2)",
+            backdropFilter: "blur(10px)",
+            color: "#fff",
+            "&:hover": { bgcolor: "rgba(255,255,255,0.35)" },
+            zIndex: 10,
           }}
         >
-          {/* Title */}
-          <Typography
-            variant="h3"
-            sx={{
-              color: "#2E7D32",
-              fontWeight: 700,
-              mb: 3,
-              fontSize: { xs: "1.8rem", md: "2.5rem" },
-              lineHeight: 1.3,
-            }}
-          >
-            {article.title}
-          </Typography>
+          <ArrowBackIosNewIcon />
+        </IconButton>
 
-          {/* Meta Information */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 3,
-              mb: 3,
-              flexWrap: "wrap",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: "#4CAF50" }}>
-                <PersonIcon sx={{ fontSize: 20 }} />
-              </Avatar>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {article.author}
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <CalendarTodayIcon sx={{ fontSize: 18, color: "#666" }} />
-              <Typography variant="body2" color="text.secondary">
-                {formatDate(article.date)}
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <VisibilityIcon sx={{ fontSize: 18, color: "#666" }} />
-              <Typography variant="body2" color="text.secondary">
-                {article.views} views
-              </Typography>
-            </Box>
-          </Box>
+        {/* Logo Tengah */}
+        <Box
+          sx={{
+            width: { xs: 100, sm: 140, md: 180 },
+            height: { xs: 100, sm: 140, md: 180 },
+            borderRadius: "50%",
+            bgcolor: "#FFFFFF",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
 
-          <Divider sx={{ mb: 4 }} />
+            backgroundColor: "rgba(255,255,255,0.8)",
+          }}
+        >
+          <img
+            src={logo}
+            alt="RSIA Sayang Ibu"
+            style={{ width: "62%", height: "62%", objectFit: "contain" }}
+          />
+        </Box>
+      </Box>
 
-          {/* Featured Image */}
-          {article.image && (
-            <Box
-              sx={{
-                mb: 4,
-                borderRadius: 3,
-                overflow: "hidden",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-              }}
-            >
-              <img
-                src={article.image}
-                alt={article.title}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  display: "block",
+      {/* MAIN CONTENT – Semua teks (kategori, judul, meta, konten) di dalam kotak artikel */}
+      <Container
+        maxWidth="md"
+        sx={{
+          py: { xs: 6, md: 10 },
+          mt: { xs: -6, md: -10 },
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+        <Paper
+          elevation={6}
+          sx={{
+            borderRadius: 5,
+            overflow: "hidden",
+            bgcolor: "#fff",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.14)",
+            border: "1px solid #e8f5e9",
+          }}
+        >
+          <Box sx={{ p: { xs: 4, md: 7 } }}>
+            {/* Kategori */}
+            <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+              <Chip
+                label={article.category.toUpperCase()}
+                sx={{
+                  bgcolor: "#4CAF50",
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: { xs: "0.95rem", md: "1.15rem" },
+                  height: 44,
+                  px: 3,
+                  borderRadius: 30,
+                  boxShadow: "0 6px 16px rgba(76,175,80,0.4)",
                 }}
               />
             </Box>
-          )}
 
-          {/* Content */}
-          <Box
-            sx={{
-              "& p": {
-                mb: 2,
-                lineHeight: 1.8,
-                fontSize: "1.1rem",
-                color: "#333",
-              },
-              "& h1, & h2, & h3, & h4, & h5, & h6": {
-                color: "#2E7D32",
-                fontWeight: 600,
-                mt: 3,
-                mb: 2,
-              },
-              "& ul, & ol": {
-                ml: 3,
-                mb: 2,
-              },
-              "& li": {
-                mb: 1,
-                lineHeight: 1.8,
-              },
-              "& img": {
-                maxWidth: "100%",
-                height: "auto",
-                borderRadius: 2,
-                my: 2,
-              },
-              "& a": {
-                color: "#4CAF50",
-                textDecoration: "none",
-                "&:hover": {
-                  textDecoration: "underline",
-                },
-              },
-            }}
-            dangerouslySetInnerHTML={{ __html: article.content }}
-          />
-
-          <Divider sx={{ my: 4 }} />
-
-          {/* Back Button */}
-          <Box sx={{ textAlign: "center" }}>
-            <Button
-              component={Link}
-              to="/articles"
-              variant="contained"
-              color="primary"
-              size="large"
+            {/* Judul Artikel */}
+            <Typography
+              variant="h1"
+              align="center"
               sx={{
-                borderRadius: 30,
-                px: 5,
-                py: 1.5,
-                fontWeight: 600,
+                fontSize: { xs: "2.4rem", sm: "3.2rem", md: "4rem" },
+                fontWeight: 900,
+                lineHeight: 1.15,
+                color: "#1B5E20",
+                mb: 5,
+                px: { xs: 2, md: 0 },
               }}
             >
-              Lihat Artikel Lainnya
-            </Button>
+              {article.title}
+            </Typography>
+
+            {/* Meta Info */}
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: { xs: 3, md: 5 },
+                mb: 6,
+                pb: 4,
+                borderBottom: "2px dashed #e8f5e9",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Avatar sx={{ bgcolor: "#4CAF50", width: 40, height: 40 }}>
+                  <PersonIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Penulis
+                  </Typography>
+                  <Typography variant="body1" fontWeight={700} color="#1B5E20">
+                    {article.author}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CalendarTodayIcon sx={{ color: "#666" }} />
+                <Typography variant="body1" color="text.secondary">
+                  {formatDate(article.date)}
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <VisibilityIcon sx={{ color: "#666" }} />
+                <Typography variant="body1" color="text.secondary">
+                  {article.views || 0} kali dibaca
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Featured Image (jika ada) */}
+            {article.image && (
+              <Box
+                sx={{
+                  my: 7,
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.15)",
+                }}
+              >
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  style={{ width: "100%", height: "auto", display: "block" }}
+                />
+              </Box>
+            )}
+
+            {/* Konten Artikel */}
+            <Box
+              sx={{
+                fontSize: "1.18rem",
+                lineHeight: 1.95,
+                color: "#2e2e2e",
+                "& p": { mb: 3.5 },
+                "& h2": {
+                  fontSize: "2rem",
+                  fontWeight: 800,
+                  color: "#1B5E20",
+                  mt: 7,
+                  mb: 3,
+                },
+                "& h3": {
+                  fontSize: "1.6rem",
+                  fontWeight: 700,
+                  color: "#2E7D32",
+                  mt: 5,
+                  mb: 2.5,
+                },
+                "& ul, & ol": { pl: 5, mb: 4 },
+                "& li": { mb: 2 },
+                "& blockquote": {
+                  borderLeft: "5px solid #4CAF50",
+                  pl: 4,
+                  py: 3,
+                  my: 5,
+                  fontStyle: "italic",
+                  bgcolor: "#f1f8e9",
+                  borderRadius: 2,
+                },
+                "& img": {
+                  borderRadius: 4,
+                  my: 5,
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                  maxWidth: "100%",
+                  height: "auto",
+                },
+                "& a": {
+                  color: "#4CAF50",
+                  fontWeight: 600,
+                  textDecoration: "underline",
+                },
+              }}
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
+
+            <Divider sx={{ my: 10, borderColor: "#e8f5e9" }} />
+
+            {/* Bottom CTA */}
+            <Box sx={{ textAlign: "center" }}>
+              <Typography variant="h5" fontWeight={700} color="#1B5E20" mb={4}>
+                Temukan informasi kesehatan terbaru lainnya
+              </Typography>
+              <Button
+                component={Link}
+                to="/articles"
+                variant="contained"
+                size="large"
+                sx={{
+                  bgcolor: "#4CAF50",
+                  borderRadius: 30,
+                  px: 7,
+                  py: 2,
+                  fontSize: "1.15rem",
+                  fontWeight: 700,
+                  boxShadow: "0 10px 30px rgba(76,175,80,0.35)",
+                  "&:hover": {
+                    bgcolor: "#43A047",
+                    transform: "translateY(-3px)",
+                  },
+                }}
+              >
+                Lihat Semua Artikel
+              </Button>
+            </Box>
           </Box>
         </Paper>
       </Container>
-    </Box>
+    </>
   );
 };
+
 export default ArticleDetailPage;

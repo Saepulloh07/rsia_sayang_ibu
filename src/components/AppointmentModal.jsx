@@ -1,20 +1,20 @@
 // src/components/AppointmentModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   Box,
   IconButton,
   useMediaQuery,
   useTheme,
-  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAuth } from "../context/AuthContext";
 import { Helmet } from "react-helmet";
-import logo from "../assets/logo.png";
 import RegistrationForm from "./RegistrationForm";
 import AppointmentForm from "./AppointmentForm";
 import BookingChecker from "./BookingChecker";
+import TutorialSidebar from "./TutorialSidebar";
+import TutorialMobilePopup from "./TutorialMobilePopup";
 
 const AppointmentModal = ({ open, onClose }) => {
   const theme = useTheme();
@@ -22,14 +22,46 @@ const AppointmentModal = ({ open, onClose }) => {
   const { user } = useAuth();
 
   const [view, setView] = useState(user ? "appointment" : "register");
+  const [showTutorial, setShowTutorial] = useState(true);
+  const [showMobileTutorial, setShowMobileTutorial] = useState(false);
+
+  // Reset tutorial saat modal dibuka
+  useEffect(() => {
+    if (open) {
+      // Cek apakah user sudah pernah melihat tutorial (gunakan localStorage)
+      const hasSeenTutorial = localStorage.getItem(`tutorial_${view}_seen`);
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+        if (isMobile) {
+          setShowMobileTutorial(true);
+        }
+      } else {
+        setShowTutorial(false);
+        setShowMobileTutorial(false);
+      }
+    }
+  }, [open, view, isMobile]);
 
   const handleRegistrationSuccess = () => {
     setView("appointment");
   };
 
   const handleSwitchToLogin = () => {
-    // Implementasi switch ke login jika diperlukan
     onClose();
+  };
+
+  const handleSkipTutorial = () => {
+    // Tandai tutorial sudah dilihat
+    localStorage.setItem(`tutorial_${view}_seen`, "true");
+    setShowTutorial(false);
+    setShowMobileTutorial(false);
+  };
+
+  const getTutorialType = () => {
+    if (view === "register") return "register";
+    if (view === "appointment") return "appointment";
+    if (view === "check") return "check";
+    return "register";
   };
 
   return (
@@ -40,6 +72,16 @@ const AppointmentModal = ({ open, onClose }) => {
           content="Pendaftaran pasien rsia sayang ibu, appointment rumah sakit batusangkar, poliklinik maternitas tanah datar, layanan kesehatan ibu anak online"
         />
       </Helmet>
+
+      {/* Mobile Tutorial Popup */}
+      {isMobile && (
+        <TutorialMobilePopup
+          open={showMobileTutorial}
+          type={getTutorialType()}
+          onClose={handleSkipTutorial}
+        />
+      )}
+
       <Dialog open={open} onClose={onClose} fullScreen>
         {/* Tombol Close */}
         <Box sx={{ position: "absolute", top: 16, right: 16, zIndex: 1 }}>
@@ -55,60 +97,32 @@ const AppointmentModal = ({ open, onClose }) => {
             height: "100vh",
           }}
         >
-          {/* Kiri: Banner */}
-          {!isMobile && (
+          {/* Kiri: Tutorial Sidebar (Desktop only) */}
+          {!isMobile && showTutorial && (
             <Box
               sx={{
                 flex: 1,
-                background: "linear-gradient(135deg, #4CAF50, #81C784)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                color: "white",
-                p: 4,
+                background: "linear-gradient(135deg, #E8F5E9, #C8E6C9)",
+                borderRight: "1px solid rgba(76, 175, 80, 0.2)",
+                overflowY: "auto",
               }}
             >
-              <Box
-                sx={{
-                  width: 140,
-                  height: 140,
-                  borderRadius: "50%",
-                  backgroundColor: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mb: 2,
-                }}
-              >
-                <img
-                  src={logo}
-                  alt="Logo"
-                  style={{ width: 100, height: 100 }}
-                />
-              </Box>
-
-              <Typography variant="h4" fontWeight={700}>
-                RSIA Sayang Ibu
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ mt: 2, maxWidth: 400, textAlign: "center" }}
-              >
-                Kami hadir untuk memberikan pelayanan kesehatan ibu & anak
-                dengan penuh kasih.
-              </Typography>
+              <TutorialSidebar
+                type={getTutorialType()}
+                onSkip={handleSkipTutorial}
+              />
             </Box>
           )}
 
-          {/* Kanan: Konten */}
+          {/* Kanan: Konten Form */}
           <Box
             sx={{
-              flex: 1.2,
+              flex: showTutorial && !isMobile ? 1.2 : 1,
               p: { xs: 3, md: 5 },
               backgroundColor: "#fff",
               display: "flex",
               flexDirection: "column",
+              overflowY: "auto",
             }}
           >
             {view === "register" && (

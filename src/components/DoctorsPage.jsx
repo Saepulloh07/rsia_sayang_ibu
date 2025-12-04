@@ -196,7 +196,7 @@ const DoctorsPage = () => {
       {/* ✅ BANNER HEADER */}
       <Box
         sx={{
-          height: { xs: 260, md: 340 },
+          height: { xs: 300, md: 440 },
           background: "linear-gradient(135deg, #4CAF50, #2E7D32)",
           display: "flex",
           alignItems: "center",
@@ -209,6 +209,7 @@ const DoctorsPage = () => {
             variant="h3"
             sx={{
               fontWeight: 700,
+              mt: 10,
               mb: 1,
               fontSize: { xs: "1.8rem", md: "2.6rem" },
             }}

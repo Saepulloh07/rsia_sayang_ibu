@@ -1,5 +1,6 @@
 import React from "react";
 import { ThemeProvider } from "@mui/material/styles";
+import { CssBaseline, GlobalStyles } from "@mui/material";
 import { Helmet } from "react-helmet";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import theme from "./theme";
@@ -22,6 +23,71 @@ import ArticleDetailPage from "./components/ArticleDetailPage";
 import Footer from "./components/Footer";
 import ChatCS from "./components/ChatCS";
 import Maintenance from "./components/Maintenance";
+import MusicPlayer from "./components/MusicPlayer";
+
+// Global styles untuk mencegah horizontal scroll
+const globalStyles = (
+  <GlobalStyles
+    styles={{
+      // Reset dan prevent horizontal scroll
+      html: {
+        overflowX: "hidden",
+        width: "100%",
+        margin: 0,
+        padding: 0,
+      },
+      body: {
+        overflowX: "hidden",
+        width: "100%",
+        margin: 0,
+        padding: 0,
+        position: "relative",
+      },
+      "#root": {
+        overflowX: "hidden",
+        width: "100%",
+        position: "relative",
+      },
+      // Prevent all potential overflow issues
+      "*": {
+        boxSizing: "border-box",
+      },
+      // Fix untuk container yang mungkin overflow
+      ".MuiContainer-root": {
+        maxWidth: "100%",
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        "@media (min-width: 600px)": {
+          paddingLeft: "24px",
+          paddingRight: "24px",
+        },
+      },
+      // Fix untuk grid yang mungkin overflow
+      ".MuiGrid-container": {
+        width: "100%",
+        margin: 0,
+      },
+      // Fix untuk carousel
+      ".carousel-root": {
+        maxWidth: "100%",
+        overflow: "hidden",
+      },
+      ".carousel .slider-wrapper": {
+        overflow: "hidden",
+      },
+      // Fix untuk gambar yang mungkin overflow
+      img: {
+        maxWidth: "100%",
+        height: "auto",
+      },
+      // Fix untuk box dengan background image
+      ".hero-section, [style*='backgroundImage']": {
+        maxWidth: "100vw",
+        overflow: "hidden",
+      },
+    }}
+  />
+);
 
 function AppContent() {
   const isMaintenance =
@@ -30,6 +96,7 @@ function AppContent() {
   if (isMaintenance) {
     return <Maintenance />;
   }
+
   return (
     <Router>
       <Helmet>
@@ -61,7 +128,9 @@ function AppContent() {
         <meta property="og:url" content="https://www.rsiasayangibu.com/" />
         <link rel="canonical" href="https://www.rsiasayangibu.com/" />
       </Helmet>
+
       <Navbar />
+
       <Routes>
         {/* Home Page */}
         <Route
@@ -172,7 +241,9 @@ function AppContent() {
           }
         />
       </Routes>
+
       <ChatCS />
+      <MusicPlayer />
     </Router>
   );
 }
@@ -180,6 +251,8 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {globalStyles}
       <AuthProvider>
         <AppContent />
       </AuthProvider>

@@ -165,7 +165,7 @@ const ContactSection = () => {
               },
             }}
           >
-            Buat Janji Temu Sekarang
+            Daftar Sekarang
           </Button>
         </Box>
 

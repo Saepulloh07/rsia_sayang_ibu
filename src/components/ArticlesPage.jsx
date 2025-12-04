@@ -134,18 +134,7 @@ const ArticlesPage = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Box sx={{ mb: 3 }}>
-            <Box
-              component="img"
-              src={logo}
-              alt="RSIA Sayang Ibu Logo"
-              sx={{
-                width: { xs: 60, md: 100 },
-                height: { xs: 60, md: 100 },
-                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
-              }}
-            />
-          </Box>
+          <Box sx={{ mb: 3 }}></Box>
           <Typography
             variant="h2"
             sx={{

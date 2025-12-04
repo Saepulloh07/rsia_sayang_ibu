@@ -15,7 +15,7 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import EmailIcon from "@mui/icons-material/Email";
 import AppointmentModal from "./AppointmentModal";
-import LoginModal from "./LoginModal"; // pastikan ini ada
+import LoginModal from "./LoginModal";
 
 const Footer = () => {
   // ✅ State dan handler dipindahkan ke dalam fungsi komponen
@@ -51,7 +51,7 @@ const Footer = () => {
               variant="h6"
               sx={{ color: "#4CAF50", fontWeight: 600, mb: 2 }}
             >
-              RSIA Sayang Ibu
+              Rumah Sakit Sayang Ibu
             </Typography>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Pusat kesehatan ibu dan anak terdepan di Batusangkar, menyediakan
@@ -115,7 +115,7 @@ const Footer = () => {
               onClick={handleAppointmentClick}
               sx={{ borderRadius: 20, px: 4 }}
             >
-              Buat Janji
+              Pendaftaran
             </Button>
           </Grid>
 
